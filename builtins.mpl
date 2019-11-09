@@ -17,6 +17,7 @@ builtins: (
   {name: "^"                       ; impl: @mplBuiltinPow                     ;}
   {name: "~"                       ; impl: @mplBuiltinNot                     ;}
 
+  {name: "addFunctionAttributes"   ; impl: @mplBuiltinAddFunctionAttributes   ;}
   {name: "addressToReference"      ; impl: @mplBuiltinAddressToReference      ;}
   {name: "alignment"               ; impl: @mplBuiltinAlignment               ;}
   {name: "and"                     ; impl: @mplBuiltinAnd                     ;}

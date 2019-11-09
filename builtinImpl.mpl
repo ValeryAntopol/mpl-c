@@ -949,6 +949,19 @@ parseSignature: [
 [
   (
     [compilable]
+    [refToAttributes: pop;]
+    [refToAttributes staticnessOfVar Weak < ["attributes must be static string" compilerError] when]
+    [
+      varAttributes: refToAttributes getVar;
+      varAttributes.data.getTag VarString = not ["attributes must be static string" compilerError] when
+    ]
+    [VarString varAttributes.data.get copy @currentNode.!attributes]
+  ) sequence
+] "mplBuiltinAddFunctionAttributes" @declareBuiltin ucall
+
+[
+  (
+    [compilable]
     [signature: parseSignature;]
     [
       name: ("null." processor.nodes.getSize) assembleString;

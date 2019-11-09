@@ -205,6 +205,7 @@ CodeNode: [{
   mplConvention:      String;
   signature:          String;
   nodeCompileOnce:    FALSE dynamic;
+  attributes:         String;
   empty:              FALSE dynamic;
   deleted:            FALSE dynamic;
   emptyDeclaration:   FALSE dynamic;

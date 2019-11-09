@@ -3694,7 +3694,7 @@ makeCompilerPosition: [
     ] if
   ] if
 
-  (currentNode.convention retType " " currentNode.irName "(" argumentList ")") @currentNode.@header.catMany
+  (currentNode.convention retType " " currentNode.irName "(" argumentList ") " currentNode.attributes " ") @currentNode.@header.catMany
   signature @currentNode.@argTypes set
 
   processor.options.debug [currentNode.empty not] && [isDeclaration not] && [currentNode.nodeCase NodeCaseEmpty = not] && [
