@@ -1604,6 +1604,14 @@ parseSignature: [
 ] "mplBuiltinFieldName" @declareBuiltin ucall
 
 [
+  (
+    [compilable]
+    [refToVar: pop;]
+    [refToVar getMplType toString makeVarString push]
+  ) sequence
+] "mplBuiltinGetSchema" @declareBuiltin ucall
+
+[
   COMPILER_SOURCE_VERSION 0i64 cast VarInt32 createVariable Static makeStaticness createPlainIR push
 ] "mplBuiltinCompilerVersion" @declareBuiltin ucall
 
