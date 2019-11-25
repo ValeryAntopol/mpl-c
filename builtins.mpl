@@ -42,6 +42,7 @@ builtins: (
   {name: "fieldName"               ; impl: @mplBuiltinFieldName               ;}
   {name: "floor"                   ; impl: @mplBuiltinFloor                   ;}
   {name: "getCallTrace"            ; impl: @mplBuiltinGetCallTrace            ;}
+  {name: "getSchema"               ; impl: @mplBuiltinGetSchema               ;}
   {name: "has"                     ; impl: @mplBuiltinHas                     ;}
   {name: "HAS_LOGS"                ; impl: @mplBuiltinHasLogs                 ;}
   {name: "if"                      ; impl: @mplBuiltinIf                      ;}
