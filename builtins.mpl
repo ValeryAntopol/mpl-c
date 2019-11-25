@@ -33,6 +33,7 @@ builtins: (
   {name: "copy"                    ; impl: @mplBuiltinCopy                    ;}
   {name: "DEBUG"                   ; impl: @mplBuiltinDebug                   ;}
   {name: "def"                     ; impl: @mplBuiltinDef                     ;}
+  {name: "dontInternalize"         ; impl: @mplBuiltinDontInternalize         ;}
   {name: "dynamic"                 ; impl: @mplBuiltinDirty                   ;}
   {name: "exportFunction"          ; impl: @mplBuiltinExportFunction          ;}
   {name: "exportVariable"          ; impl: @mplBuiltinExportVariable          ;}

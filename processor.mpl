@@ -206,6 +206,7 @@ CodeNode: [{
   signature:          String;
   nodeCompileOnce:    FALSE dynamic;
   attributes:         String;
+  dontInternalize:    FALSE dynamic;
   empty:              FALSE dynamic;
   deleted:            FALSE dynamic;
   emptyDeclaration:   FALSE dynamic;

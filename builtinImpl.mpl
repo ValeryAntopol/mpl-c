@@ -1812,6 +1812,10 @@ parseSignature: [
 ] "mplBuiltinManuallyDestroyVariable" @declareBuiltin ucall
 
 [
+  TRUE dynamic @currentNode.@dontInternalize set
+] "mplBuiltinDontInternalize" @declareBuiltin ucall
+
+[
   TRUE dynamic @currentNode.@nodeCompileOnce set
 ] "mplBuiltinCompileOnce" @declareBuiltin ucall
 

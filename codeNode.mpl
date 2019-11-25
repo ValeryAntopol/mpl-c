@@ -3622,7 +3622,7 @@ makeCompilerPosition: [
 
     currentNode.nodeCase NodeCaseLambda = [addFunctionVariableInfo] when
 
-    "define internal " makeStringView @currentNode.@header.cat
+    currentNode.dontInternalize ["define "] ["define internal "] if makeStringView @currentNode.@header.cat
   ] [
     # export func!!!
     "@" makeStringView         @currentNode.@irName.cat
@@ -3637,7 +3637,7 @@ makeCompilerPosition: [
         currentNode.nodeCase NodeCaseExport = [
           "define " makeStringView   @currentNode.@header.cat
         ] [
-          "define internal " makeStringView @currentNode.@header.cat
+          currentNode.dontInternalize ["define "] ["define internal "] if makeStringView @currentNode.@header.cat
         ] if
       ] if
     ] if
