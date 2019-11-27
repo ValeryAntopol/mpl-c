@@ -3,6 +3,7 @@
 "ascii" includeModule
 "String" includeModule
 "astNodeType" includeModule
+"sha1" includeModule
 
 fillPositionInfo: [
   astNode:;
@@ -12,6 +13,25 @@ fillPositionInfo: [
   currentFileNumber @astNode.@fileNumber set
 ];
 
+appendData: [
+  type: data:;;
+
+  dataSize: data.getSize Nat32 cast;
+  prefix: (
+    type Nat8 cast 
+    dataSize 24n32 rshift Nat8 cast
+    dataSize 16n32 rshift Nat8 cast
+    dataSize  8n32 rshift Nat8 cast
+    dataSize Nat8 cast
+  ) makeArrayRange;
+
+  @unfinishedHashes [
+    sha: .@value;
+    prefix @sha.appendData
+    data @sha.appendData
+  ] each
+];
+
 makeLabelNode: [
   children:;
   name:;
@@ -19,6 +39,11 @@ makeLabelNode: [
   @result fillPositionInfo
   (name ":") assembleString @result.@token set
   AstNodeType.Label @result.@data.setTag
+
+  hashData: name textSize Int32 cast name stringMemory Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Label hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Label @result.@data.get;
   children @branch.@children set
   name @branch.@name set
@@ -31,6 +56,8 @@ makeCodeNode: [
   @result fillPositionInfo
   "[" toString @result.@token set
   AstNodeType.Code @result.@data.setTag
+  AstNodeType.Code (AstNodeType.Code Nat8 cast) makeArrayRange appendData
+  @unfinishedHashes.last.finish @result.!shaHash
   branch: AstNodeType.Code @result.@data.get;
   children @branch set
   @result
@@ -42,6 +69,8 @@ makeObjectNode: [
   @result fillPositionInfo
   "{" toString @result.@token set
   AstNodeType.Object @result.@data.setTag
+  AstNodeType.Object (AstNodeType.Object Nat8 cast) makeArrayRange appendData
+  @unfinishedHashes.last.finish @result.!shaHash
   branch: AstNodeType.Object @result.@data.get;
   children @branch set
   @result
@@ -53,6 +82,8 @@ makeListNode: [
   @result fillPositionInfo
   "(" toString @result.@token set
   AstNodeType.List @result.@data.setTag
+  AstNodeType.List (AstNodeType.List Nat8 cast) makeArrayRange appendData
+  @unfinishedHashes.last.finish @result.!shaHash
   branch: AstNodeType.List @result.@data.get;
   children @branch set
   @result
@@ -64,6 +95,10 @@ makeNameNode: [
   @result fillPositionInfo
   name toString @result.@token set
   AstNodeType.Name @result.@data.setTag
+
+  hashData: name textSize Int32 cast name stringMemory Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Name hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
   branch: AstNodeType.Name @result.@data.get;
   name toString @branch.@name set
   @result
@@ -75,6 +110,11 @@ makeNameReadNode: [
   @result fillPositionInfo
   ("@" name) assembleString @result.@token set
   AstNodeType.NameRead @result.@data.setTag
+
+  hashData: name textSize Int32 cast name stringMemory Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.NameRead hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.NameRead @result.@data.get;
   name toString @branch.@name set
   @result
@@ -86,6 +126,11 @@ makeNameWriteNode: [
   @result fillPositionInfo
   ("!" name) assembleString @result.@token set
   AstNodeType.NameWrite @result.@data.setTag
+
+  hashData: name textSize Int32 cast name stringMemory Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.NameWrite hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.NameWrite @result.@data.get;
   name toString @branch.@name set
   @result
@@ -97,6 +142,11 @@ makeNameMemberNode: [
   @result fillPositionInfo
   ("." name) assembleString @result.@token set
   AstNodeType.NameMember @result.@data.setTag
+
+  hashData: name textSize Int32 cast name stringMemory Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.NameMember hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.NameMember @result.@data.get;
   name toString @branch.@name set
   @result
@@ -108,6 +158,11 @@ makeNameReadMemberNode: [
   @result fillPositionInfo
   (".@" name) assembleString @result.@token set
   AstNodeType.NameReadMember @result.@data.setTag
+
+  hashData: name textSize Int32 cast name stringMemory Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.NameReadMember hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.NameReadMember @result.@data.get;
   name toString @branch.@name set
   @result
@@ -119,6 +174,11 @@ makeNameWriteMemberNode: [
   @result fillPositionInfo
   (".!" name) assembleString @result.@token set
   AstNodeType.NameWriteMember @result.@data.setTag
+
+  hashData: name textSize Int32 cast name stringMemory Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.NameWriteMember hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.NameWriteMember @result.@data.get;
   name toString @branch.@name set
   @result
@@ -130,6 +190,11 @@ makeStringNode: [
   @result fillPositionInfo
   "TEXT" toString @result.@token set
   AstNodeType.String @result.@data.setTag
+
+  hashData: value textSize Int32 cast value stringMemory Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.String hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.String @result.@data.get;
   value @branch set
   @result
@@ -142,6 +207,11 @@ makeNumberi8Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numberi8 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numberi8 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numberi8 @result.@data.get;
   number @branch set
   @result
@@ -154,6 +224,11 @@ makeNumberi16Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numberi16 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numberi16 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numberi16 @result.@data.get;
   number @branch set
   @result
@@ -166,6 +241,11 @@ makeNumberi32Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numberi32 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numberi32 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numberi32 @result.@data.get;
   number @branch set
   @result
@@ -178,6 +258,11 @@ makeNumberi64Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numberi64 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numberi64 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numberi64 @result.@data.get;
   number @branch set
   @result
@@ -190,6 +275,11 @@ makeNumberixNode: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numberix @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numberix hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numberix @result.@data.get;
   number @branch set
   @result
@@ -202,6 +292,11 @@ makeNumbern8Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numbern8 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numbern8 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numbern8 @result.@data.get;
   number @branch set
   @result
@@ -214,6 +309,11 @@ makeNumbern16Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numbern16 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numbern16 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numbern16 @result.@data.get;
   number @branch set
   @result
@@ -226,6 +326,11 @@ makeNumbern32Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numbern32 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numbern32 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numbern32 @result.@data.get;
   number @branch set
   @result
@@ -238,6 +343,11 @@ makeNumbern64Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numbern64 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numbern64 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numbern64 @result.@data.get;
   number @branch set
   @result
@@ -250,6 +360,11 @@ makeNumbernxNode: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Numbernx @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Numbernx hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Numbernx @result.@data.get;
   number @branch set
   @result
@@ -262,6 +377,11 @@ makeReal32Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Real32 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Real32 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Real32 @result.@data.get;
   number @branch set
   @result
@@ -274,6 +394,11 @@ makeReal64Node: [
   @result fillPositionInfo
   token @result.@token set
   AstNodeType.Real64 @result.@data.setTag
+
+  hashData: number storageSize Int32 cast number storageAddress Nat8 addressToReference makeArrayRangeRaw;
+  AstNodeType.Real64 hashData appendData
+  @unfinishedHashes.last.finish @result.!shaHash
+
   branch: AstNodeType.Real64 @result.@data.get;
   number @branch set
   @result
@@ -282,6 +407,36 @@ makeReal64Node: [
 makeParserConstants: [{
   eof:        [  0n32];
 
+  #cr:         [ 13n32];
+  #lf:         [ 10n32];
+  #space:      [ 32n32];
+  #exclamation:[ 33n32];
+  #quote:      [ 34n32];
+  #grid:       [ 35n32];
+  #openRBr:    [ 40n32];
+  #closeRBr:   [ 41n32];
+  #openSBr:    [ 91n32];
+  #closeSBr:   [ 93n32];
+  #openFBr:    [123n32];
+  #closeFBr:   [125n32];
+  #plus:       [ 43n32];
+  #comma:      [ 44n32];
+  #minus:      [ 45n32];
+  #dot:        [ 46n32];
+  #zero:       [ 48n32];
+  #colon:      [ 58n32];
+  #semicolon:  [ 59n32];
+  #dog:        [ 64n32];
+  #backSlash:  [ 92n32];
+  ## it is for numbers
+  #aCode:      [ 97n32];
+  #aCodeBig:   [ 65n32];
+  #eCode:      [101n32];
+  #eCodeBig:   [ 69n32];
+  #iCode:      [105n32];
+  #nCode:      [110n32];
+  #rCode:      [114n32];
+  #xCode:      [120n32];
 
   makeLookupTable: [
     av:;
@@ -540,26 +695,27 @@ parseDecNumber: [
 
   token: tokenBegin tokenEnd splittedString.chars makeSubRange assembleString;
 
-  afterT.getSize 2 > [ "error in number constant" lexicalError ] when
+  afterT.dataSize 2 > [ "error in number constant" lexicalError ] when
 
   typeName: 0 dynamic;
-  afterT.getSize [typeName 100 * i afterT.at + 1 + @typeName set] times
+  afterT.dataSize [typeName 100 * i afterT.at + 1 + @typeName set] times
+
 
   typeClass 2 = [
     type: 0.0r64 dynamic;
     ten: 10.0r64 dynamic;
     result: 0.0r64 dynamic;
-    beforeDot.getSize [result 10.0r64 * i beforeDot.at type cast + @result set] times
+    beforeDot.dataSize [result 10.0r64 * i beforeDot.at type cast + @result set] times
     tenRcp: 0.1r64 dynamic;
     fracPartFactor: tenRcp copy;
-    afterDot.getSize [
+    afterDot.dataSize [
       digit: i afterDot.at type cast;
       digit  fracPartFactor * result + @result set
       fracPartFactor tenRcp * @fracPartFactor set
     ] times
 
     decOrder: 0.0r64 dynamic;
-    afterE.getSize [decOrder 10.0r64 * i afterE.at type cast + @decOrder set] times
+    afterE.dataSize [decOrder 10.0r64 * i afterE.at type cast + @decOrder set] times
     hasEMinus [decOrder neg @decOrder set] when
     hasMinus [result neg @result set] when
     result 10.0r64 decOrder ^ * @result set
@@ -579,7 +735,7 @@ parseDecNumber: [
       type: 0n64 dynamic;
       ten: 10n64 dynamic;
       result: 0n64 dynamic;
-      beforeDot.getSize [result 10n64 * i beforeDot.at 0i64 cast type cast + @result set] times
+      beforeDot.dataSize [result 10n64 * i beforeDot.at 0i64 cast type cast + @result set] times
       typeName 705 = [
         result token makeNumbern64Node @mainResult.@memory.pushBack
       ] [
@@ -605,7 +761,7 @@ parseDecNumber: [
       type: 0i64 dynamic;
       ten: 10i64 dynamic;
       result: 0i64 dynamic;
-      beforeDot.getSize [result 10i64 * i beforeDot.at type cast + @result set] times
+      beforeDot.dataSize [result 10i64 * i beforeDot.at type cast + @result set] times
       hasMinus [result neg @result set] when
       typeName 705 = [
         result token makeNumberi64Node @mainResult.@memory.pushBack
@@ -689,18 +845,17 @@ parseHexNumber: [
   ] loop
 
   token: tokenBegin tokenEnd splittedString.chars makeSubRange assembleString;
-  afterT.getSize 2 > [ "error in number constant" lexicalError ] when
+  afterT.dataSize 2 > [ "error in number constant" lexicalError ] when
 
   typeName: 0 dynamic;
-  afterT.getSize [typeName 100 * i afterT.at + 1 + @typeName set] times
+  afterT.dataSize [typeName 100 * i afterT.at + 1 + @typeName set] times
   hasMinus ["negative hex constants not allowed" lexicalError] when
 
   typeClass 1 = [
     type: 0n64;
     ten: 10n64;
     result: 0n64;
-    beforeT.getSize 0 = ["empty hex constant" lexicalError] when
-    beforeT.getSize [result 16n64 * i beforeT.at 0i64 cast type cast + @result set] times
+    beforeT.dataSize [result 16n64 * i beforeT.at 0i64 cast type cast + @result set] times
     typeName 705 = [
       result token makeNumbern64Node @mainResult.@memory.pushBack
     ] [
@@ -726,8 +881,7 @@ parseHexNumber: [
     type: 0i64 dynamic;
     ten: 10i64 dynamic;
     result: 0i64 dynamic;
-    beforeT.getSize 0 = ["empty hex constant" lexicalError] when
-    beforeT.getSize [result 16i64 * i beforeT.at type cast + @result set] times
+    beforeT.dataSize [result 16i64 * i beforeT.at type cast + @result set] times
     typeName 705 = [
       result token makeNumberi64Node @mainResult.@memory.pushBack
     ] [
@@ -786,18 +940,11 @@ makeLabel: [
   ascii.semicolon @unfinishedTerminators.pushBack
   name toString @unfinishedLabelNames.pushBack
   IndexArray @unfinishedNodes.pushBack
+  ShaCounter @unfinishedHashes.pushBack
 ];
 
 parseName: [
-  DotState: (
-    "UNKNOWN"
-    "MULTI_DOT"
-    "NOT_A_MEMBER"
-    "WAS_FIRST_DOT"
-    "MEMBER"
-  ) Int32 enum;
-
-  dotState: DotState.UNKNOWN dynamic;
+  member: FALSE dynamic;
   read: FALSE dynamic;
   write: FALSE dynamic;
   label: FALSE dynamic;
@@ -816,47 +963,27 @@ parseName: [
         FALSE
       ] [
         currentCode ascii.dot = [
-          dotState (
-            DotState.MULTI_DOT [
-              currentSymbol @nameSymbols.pushBack
-              iterate TRUE
-            ]
-            DotState.NOT_A_MEMBER [
-              currentSymbol @nameSymbols.pushBack
-              DotState.MULTI_DOT @dotState set
-              iterate TRUE
-            ]
-            DotState.WAS_FIRST_DOT [
-              currentSymbol @nameSymbols.pushBack
-              DotState.MULTI_DOT @dotState set
-              iterate TRUE
-            ]
-            [
-              nameSymbols.getSize 0 > [
-                FALSE
-              ] [
-                checkFirst
-                checkOffset 1 + @checkOffset set
-                currentSymbol @nameSymbols.pushBack
-                DotState.WAS_FIRST_DOT @dotState set
-                iterate TRUE
-              ] if
-            ]
-          ) case
+          nameSymbols.dataSize 0 > [
+            FALSE
+          ] [
+            checkFirst
+            checkOffset 1 + @checkOffset set
+            TRUE @member set
+            iterate
+            TRUE
+          ] if
         ] [
           currentCode ascii.at = [
             checkFirst
-            dotState DotState.UNKNOWN = [DotState.NOT_A_MEMBER @dotState set] when
             TRUE @read set
             iterate TRUE
           ] [
             currentCode ascii.exclamation = [
               checkFirst
-              dotState DotState.UNKNOWN = [DotState.NOT_A_MEMBER @dotState set] when
               TRUE @write set
               iterate TRUE
             ] [
-              currentCode ascii.comma = nameSymbols.getSize 0 > and [
+              currentCode ascii.comma = nameSymbols.dataSize 0 > and [
                 FALSE
               ] [
                 currentCode pc.endNames inArray [
@@ -866,23 +993,7 @@ parseName: [
                   ] when
                   FALSE
                 ] [
-                  dotState
-                  (
-                    DotState.MULTI_DOT [
-                      "identifier cannot start from many dots" lexicalError
-                    ]
-                    DotState.WAS_FIRST_DOT [
-                      DotState.MEMBER @dotState set
-                      @nameSymbols.clear
-                    ]
-                    DotState.MEMBER [
-                    ]
-                    [
-                      DotState.UNKNOWN @dotState set
-                    ]
-                  ) case
-
-                  nameSymbols.getSize 1 > [0 nameSymbols.at "," =] && [
+                  nameSymbols.dataSize 1 > [0 nameSymbols.at "," =] && [
                     "identifier cannot start from comma" lexicalError
                   ] when
                   currentSymbol @nameSymbols.pushBack
@@ -903,25 +1014,31 @@ parseName: [
   mainResult.success [
     read write and ["wrong identifier" lexicalError] when
 
-    nameSymbols.getSize 0 = [
-      read [
-        label ["@" makeLabel FALSE]["@" makeNameNode @mainResult.@memory.pushBack TRUE] if
+    nameSymbols.dataSize 0 = [
+      member [
+        read write or [undo "wrong identifier" lexicalError] when
+        "." makeNameNode @mainResult.@memory.pushBack
+        TRUE
       ] [
-        write [
-          label ["!" makeLabel FALSE]["!" makeNameNode @mainResult.@memory.pushBack TRUE] if
+        read [
+          label ["@" makeLabel FALSE]["@" makeNameNode @mainResult.@memory.pushBack TRUE] if
         ] [
-          "empty name" lexicalError
-          FALSE
+          write [
+            label ["!" makeLabel FALSE]["!" makeNameNode @mainResult.@memory.pushBack TRUE] if
+          ] [
+            "empty name" lexicalError
+            FALSE
+          ] if
         ] if
       ] if
     ] [
       name: nameSymbols assembleString;
 
       label [
-        dotState DotState.MEMBER = read write or or ["label declaration must be without . @ ! modifiers" lexicalError] when
+        member read write or or ["label declaration must be without . @ ! modifiers" lexicalError] when
         name makeLabel FALSE
       ] [
-        dotState DotState.MEMBER = [
+        member [
           read [
             name makeNameReadMemberNode @mainResult.@memory.pushBack TRUE
           ] [
@@ -980,12 +1097,15 @@ addNestedNode: [
   IndexArray @unfinishedNodes.pushBack
   currentCode ascii.openRBr = [
     ascii.closeRBr @unfinishedTerminators.pushBack
+    ShaCounter @unfinishedHashes.pushBack
   ] [
     currentCode ascii.openFBr = [
       ascii.closeFBr @unfinishedTerminators.pushBack
+      ShaCounter @unfinishedHashes.pushBack
     ] [
       currentCode ascii.openSBr = [
         ascii.closeSBr @unfinishedTerminators.pushBack
+        ShaCounter @unfinishedHashes.pushBack
       ] [
         "unknown starter for nested node" lexicalError
       ] if
@@ -997,7 +1117,7 @@ addNestedNode: [
 
 addToLastUnfinished: [
   @mainResult.@memory.pushBack
-  mainResult.memory.getSize 1 - @unfinishedNodes.last.pushBack
+  mainResult.memory.dataSize 1 - @unfinishedNodes.last.pushBack
 ];
 
 parseNode: [
@@ -1026,33 +1146,39 @@ parseNode: [
                 @unfinishedNodes.last makeListNode
                 @unfinishedNodes.popBack
                 @unfinishedTerminators.popBack
+                @unfinishedHashes.popBack
                 addToLastUnfinished
               ] [
                 currentCode ascii.closeSBr = [
                   @unfinishedNodes.last makeCodeNode
                   @unfinishedNodes.popBack
                   @unfinishedTerminators.popBack
+                  @unfinishedHashes.popBack
                   addToLastUnfinished
                 ] [
                   currentCode ascii.closeFBr = [
                     @unfinishedNodes.last makeObjectNode
                     @unfinishedNodes.popBack
                     @unfinishedTerminators.popBack
+                    @unfinishedHashes.popBack
                     addToLastUnfinished
                   ] [
                     currentCode ascii.null = [
-                      unfinishedNodes.getSize 1 = not [
+                      unfinishedNodes.dataSize 1 = not [
                         "unexpected end of the file!" makeStringView lexicalError
                       ] when
                       0 @unfinishedNodes.at @mainResult.@nodes set
+                      0 @unfinishedHashes.at.finish @mainResult.!shaHash
                       @unfinishedNodes.popBack
                       @unfinishedTerminators.popBack
+                      @unfinishedHashes.popBack
                     ] [
                       currentCode ascii.semicolon = [
                         @unfinishedLabelNames.last @unfinishedNodes.last makeLabelNode
                         @unfinishedNodes.popBack
                         @unfinishedTerminators.popBack
                         @unfinishedLabelNames.popBack
+                        @unfinishedHashes.popBack
                         addToLastUnfinished
                       ] [
                         "unknown terminator" makeStringView lexicalError
@@ -1093,12 +1219,12 @@ parseNode: [
     ] [
       lastPosition: currentPosition copy;
       parseIdentifier [
-        mainResult.memory.getSize 1 -   # if made label, dont do it
+        mainResult.memory.dataSize 1 -   # if made label, dont do it
         @unfinishedNodes.last.pushBack
       ] when
     ] if
 
-    unfinishedNodes.getSize 0 > [mainResult.success copy] &&
+    unfinishedNodes.dataSize 0 > [mainResult.success copy] &&
   ] loop
 ];
 
@@ -1123,10 +1249,12 @@ parseNode: [
     unfinishedLabelNames: String Array;
     unfinishedNodes: IndexArray Array;
     unfinishedTerminators: Nat32 Array;
+    unfinishedHashes: ShaCounter Array;
 
     currentPosition @unfinishedPositions.pushBack
     IndexArray @unfinishedNodes.pushBack
     ascii.null @unfinishedTerminators.pushBack
+    ShaCounter @unfinishedHashes.pushBack
 
     iterate parseNode
   ] [

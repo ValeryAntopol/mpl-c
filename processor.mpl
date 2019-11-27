@@ -15,6 +15,7 @@ StringArray: [String Array];
 ProcessorOptions: [{
   mainPath:       String;
   fileNames:      StringArray;
+  incrBuildDir:   String;
   pointerSize:    64nx dynamic;
   staticLiterals: TRUE dynamic;
   debug:          TRUE dynamic;
@@ -22,8 +23,6 @@ ProcessorOptions: [{
   autoRecursion:  FALSE dynamic;
   logs:           FALSE dynamic;
   verboseIR:      FALSE dynamic;
-  callTrace:      FALSE dynamic;
-  threadModel:    0 dynamic;
   linkerOptions:  String Array;
 }];
 
@@ -33,11 +32,16 @@ ProcessorErrorInfo: [{
   position: CompilerPositionInfo Array;
 }];
 
+ModuleResult: [{
+  name: String;
+  text: String;
+}];
+
 ProcessorResult: [{
   success: TRUE dynamic;
   findModuleFail: FALSE dynamic;
   maxDepthExceeded: FALSE dynamic;
-  program: String;
+  programs: ModuleResult Array;
   errorInfo: ProcessorErrorInfo;
   globalErrorInfo: ProcessorErrorInfo Array;
 }];
@@ -71,7 +75,6 @@ Capture: [{
   nameInfo: -1 dynamic;
   nameOverload: -1 dynamic;
   cntNameOverload: -1 dynamic;
-  cntNameOverloadParent: -1 dynamic;
 }];
 
 FieldCapture: [{
@@ -81,7 +84,6 @@ FieldCapture: [{
   nameInfo: -1 dynamic;
   nameOverload: -1 dynamic;
   cntNameOverload: -1 dynamic;
-  cntNameOverloadParent: -1 dynamic;
 }];
 
 IndexInfo: [{
@@ -106,13 +108,15 @@ NodeStateNew:         [0n8 dynamic];
 NodeStateNoOutput:    [1n8 dynamic]; #after calling NodeStateNew recursion with unknown output, node is uncompilable
 NodeStateHasOutput:   [2n8 dynamic]; #after merging "if" with output and without output, node can be compiled
 NodeStateCompiled:    [3n8 dynamic]; #node finished
-NodeStateFailed:      [4n8 dynamic]; #node finished
 
 NodeRecursionStateNo:       [0n8 dynamic];
 NodeRecursionStateFail:     [1n8 dynamic];
 NodeRecursionStateNew:      [2n8 dynamic];
 NodeRecursionStateOld:      [3n8 dynamic];
 NodeRecursionStateFailDone: [4n8 dynamic];
+
+UnitIdAny: [-1 dynamic];
+UnitIdNone: [-2 dynamic];
 
 CaptureNameResult: [{
   refToVar: RefToVar;
@@ -130,7 +134,6 @@ NameWithOverloadAndRefToVar: [{
   nameInfo: -1 dynamic;
   nameOverload: -1 dynamic;
   cntNameOverload: -1 dynamic;
-  cntNameOverloadParent: -1 dynamic;
   refToVar: RefToVar;
   startPoint: -1 dynamic;
 }];
@@ -161,8 +164,6 @@ MatchingInfo: [{
   preInputs: RefToVar Array;
   captures: Capture Array;
   fieldCaptures: FieldCapture Array;
-  hasStackUnderflow: FALSE dynamic;
-  unfoundedNames: Int32 Cond HashTable; #nameInfos
 }];
 
 CFunctionSignature: [{
@@ -178,99 +179,87 @@ UsedModuleInfo: [{
 }];
 
 CodeNode: [{
-  root:             FALSE dynamic;
-  parent:           0 dynamic;
-  nodeCase:         NodeCaseCode;
-  position:         CompilerPositionInfo;
-  stack:            RefToVar Array; # we must compile node without touching parent
-  minStackDepth:    0 dynamic;
-  program:          Instruction Array;
-  aliases:          String Array;
-  variables:        Variable Owner Array; # as unique_ptr...
-  lastLambdaName:   Int32;
-  nextRecLambdaId:  -1 dynamic;
+  root: FALSE dynamic;
+  parent: 0 dynamic;
+  nodeCase: NodeCaseCode;
+  position: CompilerPositionInfo;
+  stack: RefToVar Array; # we must compile node without touching parent
+  minStackDepth: 0 dynamic;
+  program: Instruction Array;
+  aliases: String Array;
+  variables: Variable Owner Array; # as unique_ptr...
+  lastLambdaName: Int32;
+  nextRecLambdaId: -1 dynamic;
+  indexOfASTNode: -1 dynamic;
 
-  nodeIsRecursive:    FALSE dynamic;
+  nodeIsRecursive: FALSE dynamic;
   nextLabelIsVirtual: FALSE dynamic;
-  nextLabelIsSchema:  FALSE dynamic;
-  nextLabelIsConst:   FALSE dynamic;
-  recursionState:     NodeRecursionStateNo;
-  state:              NodeStateNew;
-  struct:             Struct;
-  irName:             String;
-  header:             String;
-  argTypes:           String;
-  csignature:         CFunctionSignature;
-  convention:         String;
-  mplConvention:      String;
-  signature:          String;
-  nodeCompileOnce:    FALSE dynamic;
-  empty:              FALSE dynamic;
-  deleted:            FALSE dynamic;
-  emptyDeclaration:   FALSE dynamic;
-  uncompilable:       FALSE dynamic;
-  variadic:           FALSE dynamic;
-  hasNestedCall:      FALSE dynamic;
+  nextLabelIsSchema: FALSE dynamic;
+  nextLabelIsConst: FALSE dynamic;
+  recursionState: NodeRecursionStateNo;
+  state: NodeStateNew;
+  struct: Struct;
+  irName: String;
+  header: String;
+  argTypes: String;
+  csignature: CFunctionSignature;
+  convention: String;
+  mplConvention: String;
+  signature: String;
+  nodeCompileOnce: FALSE dynamic;
+  empty: FALSE dynamic;
+  deleted: FALSE dynamic;
+  emptyDeclaration: FALSE dynamic;
+  uncompilable: FALSE dynamic;
+  variadic: FALSE dynamic;
 
-  countOfUCall:         0 dynamic;
-  declarationRefs:      Cond Array;
+  declarationRefs: Cond Array;
   buildingMatchingInfo: MatchingInfo;
-  matchingInfo:         MatchingInfo;
-  outputs:              Argument Array;
+  matchingInfo: MatchingInfo;
+  outputs: Argument Array;
 
   fromModuleNames:   NameWithOverloadAndRefToVar Array;
   labelNames:        NameWithOverloadAndRefToVar Array;
   captureNames:      NameWithOverloadAndRefToVar Array;
   fieldCaptureNames: NameWithOverloadAndRefToVar Array;
 
-  captureTable:      RefToVar Cond HashTable;
+  captureTable: RefToVar Cond HashTable;
   fieldCaptureTable: RefToVar Cond HashTable;
 
-  candidatesToDie:     RefToVar Array;
+  candidatesToDie: RefToVar Array;
   unprocessedAstNodes: IndexArray;
-  moduleName:          String;
-  includedModules:     Int32 Array; #ids in order
+  moduleName: String;
+  fileName: String;
+  includedModules: Int32 Array; #ids in order
   directlyIncludedModulesTable: Int32 Cond HashTable; # dont include twice plz
-  includedModulesTable:         Int32 UsedModuleInfo HashTable; # dont include twice plz
-  usedModulesTable:             Int32 UsedModuleInfo HashTable; # moduleID, hasUsedVars
-  usedOrIncludedModulesTable:   Int32 Cond HashTable; # moduleID, hasUsedVars
+  includedModulesTable: Int32 UsedModuleInfo HashTable; # dont include twice plz
+  usedModulesTable: Int32 UsedModuleInfo HashTable; # moduleID, hasUsedVars
+  usedOrIncludedModulesTable: Int32 Cond HashTable; # moduleID, hasUsedVars
 
-  refToVar:           RefToVar; #refToVar of function with compiled node
-  varNameInfo:        -1 dynamic; #variable name of imported function
-  moduleId:           -1 dynamic;
-  indexArrayAddress:  0nx dynamic;
-  matchingInfoIndex:  -1 dynamic;
-  exportDepth:        0 dynamic;
-  namedFunctions:     String Int32 HashTable; # name -> node ID
-  capturedVars:       RefToVar Array;
-  funcDbgIndex:      -1 dynamic;
-  lastVarName:        0 dynamic;
-  lastBrLabelName:    0 dynamic;
+  refToVar: RefToVar; #refToVar of this node
+  varNameInfo: -1 dynamic; #variable name of importedtion
+  moduleId: -1 dynamic;
+  namedFunctions: String Int32 HashTable; # name -> node ID
+  capturedVars: RefToVar Array;
+  funcDbgIndex: -1 dynamic;
+  lastVarName: 0 dynamic;
+  lastBrLabelName: 0 dynamic;
   variableCountDelta: 0 dynamic;
 
   INIT: [];
   DIE: [];
 }];
 
-MatchingNode: [{
-  unknownMplType: IndexArray;
-  byMplType: Int32 IndexArray HashTable; #first input MPL type
-
-  compilerPositionInfo: CompilerPositionInfo;
-  entries: Int32;
-  tries: Int32;
-  size: Int32;
-}];
-
 Processor: [{
   options: ProcessorOptions;
 
-  nodes:               CodeNode Owner Array;
-  matchingNodes:       Natx MatchingNode HashTable;
+  nodes: CodeNode Owner Array;
+  matchingNodes: Natx IndexArray HashTable;
   recursiveNodesStack: Int32 Array;
-  nameInfos:           NameInfo Array;
-  modules:             String Int32 HashTable; # -1 no module, or Id of codeNode
-  nameToId:            String Int32 HashTable; # id of nameInfo from parser
+  nameInfos: NameInfo Array;
+  modules:         String Int32 HashTable; # -1 no module, or Id of codeNode
+  capsModuleNames: String Int32 HashTable; # -1 no module, or Id of codeNode
+  nameToId:        String Int32 HashTable; # id of nameInfo from parser
 
   emptyNameInfo:               -1 dynamic;
   callNameInfo:                -1 dynamic;
@@ -287,51 +276,50 @@ Processor: [{
   failProcNameInfo:            -1 dynamic;
   conventionNameInfo:          -1 dynamic;
 
-  funcAliasCount:         0 dynamic;
-  globalVarCount:         0 dynamic;
-  globalVarId:            0 dynamic;
-  globalInitializer:      -1 dynamic; # index of func for calling all initializers
+  funcAliasCount:     0 dynamic;
+  globalVarCount:     0 dynamic;
+  globalVarId:        0 dynamic;
+  globalInitializer: -1 dynamic; # index of for calling all initializers
   globalDestructibleVars: RefToVar Array;
-  exportDepth:            0 dynamic;
+  processingExport: 0 dynamic;
 
-  stringNames: String RefToVar HashTable;        #for string constants
-  typeNames:   String Int32 HashTable;           #mplType->irAliasId
+  stringNames: String String HashTable;        #for string constants
+  typeNames: String Int32 HashTable;           #mplType->irAliasId
 
-  nameBuffer:  String Array;
-  nameTable:   StringView Int32 HashTable;       #strings->nameTag; strings from nameBuffer
+  nameBuffer: String Array;
+  nameTable: StringView Int32 HashTable;       #strings->nameTag; strings from nameBuffer
 
-  depthOfRecursion:    0 dynamic;
+  depthOfRecursion: 0 dynamic;
   maxDepthOfRecursion: 0 dynamic;
-  depthOfPre:          0 dynamic;
-
-  prolog:              String Array;
+  depthOfPre: 0 dynamic;
+  prolog: String Array;
 
   debugInfo: {
-    strings:          String Array;
-    locationIds:      IntTable;
-    lastId:           0 dynamic;
-    unit:             -1 dynamic;
+    strings: String Array;
+    locationIds: IntTable;
+    lastId: 0 dynamic;
+    unit: -1 dynamic;
     unitStringNumber: -1 dynamic;
-    cuStringNumber:   -1 dynamic;
-    fileNameIds:      Int32 Array;
-    typeIdToDbgId:    IntTable;
-    globals:          Int32 Array;
+    cuStringNumber: -1 dynamic;
+    fileNameIds: Int32 Array;
+    typeIdToDbgId: IntTable;
+    globals: Int32 Array;
   };
 
   lastStringId: 0 dynamic;
-  lastTypeId:   0 dynamic;
-  unitId:       0 dynamic; # number of compiling unit
+  lastTypeId: 0 dynamic;
+  unitId: 0 dynamic; # number of compiling unit
 
-  namedFunctions:  String Int32 HashTable; # name -> node ID
+  namedFunctions: String Int32 HashTable; # name -> node ID
   moduleFunctions: Int32 Array;
-  dtorFunctions:   Int32 Array;
+  dtorFunctions: Int32 Array;
 
-  varCount:          0 dynamic;
+  varCount: 0 dynamic;
   structureVarCount: 0 dynamic;
-  fieldVarCount:     0 dynamic;
-  nodeCount:         0 dynamic;
-  deletedNodeCount:  0 dynamic;
-  deletedVarCount:   0 dynamic;
+  fieldVarCount: 0 dynamic;
+  nodeCount: 0 dynamic;
+  deletedNodeCount: 0 dynamic;
+  deletedVarCount: 0 dynamic;
 
   usedFloatBuiltins: FALSE dynamic;
 

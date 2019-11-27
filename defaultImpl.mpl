@@ -1,9 +1,10 @@
 "defaultImpl" module
 "control" includeModule
+"ascii" includeModule
 
 failProcForProcessor: [
   failProc: [stringMemory printAddr " - fail while handling fail" stringMemory printAddr];
-  message:;
+  copy message:;
   "ASSERTION FAILED!!!" print LF print
   message print LF print
   "While compiling:" print LF print
@@ -42,22 +43,15 @@ defaultSet: [
   refToSrc: pop;
 
   compilable [
-    refToSrc makeVarRealCaptured
-    refToDst makeVarRealCaptured
-
     refToDst refToSrc variablesAreSame [
       refToSrc getVar.data.getTag VarImport = [
         "functions cannot be copied" compilerError
       ] [
-        refToSrc getVar.data.getTag VarString = [
-          "builtin-strings cannot be copied" compilerError
+        refToDst.mutable [
+          [refToDst staticnessOfVar Weak = not] "Destination is weak!" assert
+          refToSrc refToDst createCopyToExists
         ] [
-          refToDst.mutable [
-            [refToDst staticnessOfVar Weak = not] "Destination is weak!" assert
-            refToSrc refToDst createCopyToExists
-          ] [
-            "destination is immutable" compilerError
-          ] if
+          "destination is immutable" compilerError
         ] if
       ] if
     ] [
@@ -97,6 +91,25 @@ defaultMakeConstWith: [
   ] when
 ];
 
+useOrIncludeModuleName: [
+  copy asUse:;
+  name:;
+  fr: name makeStringView processor.modules.find;
+  fr.success [fr.value 0 < not] && [
+    frn: fr.value currentNode.usedModulesTable.find;
+    frn2: fr.value currentNode.directlyIncludedModulesTable.find;
+    frn.success frn2.success or [
+      ("duplicate use module: " name) assembleString compilerError
+    ] [
+      fr.value asUse processUseModule
+    ] if
+  ] [
+    TRUE dynamic @processorResult.@findModuleFail set
+    name @processorResult.@errorInfo.@missedModule set
+    ("module not found: " name) assembleString compilerError
+  ] if
+];
+
 defaultUseOrIncludeModule: [
   copy asUse:;
   (
@@ -108,25 +121,47 @@ defaultUseOrIncludeModule: [
       varName: refToName getVar;
       varName.data.getTag VarString = not ["name must be static string" compilerError] when
     ] [
-      string: VarString varName.data.get;
-      ("use or include module " string) addLog
-
-      fr: string makeStringView processor.modules.find;
-      fr.success [fr.value 0 < not] && [
-        frn: fr.value currentNode.usedModulesTable.find;
-        frn2: fr.value currentNode.directlyIncludedModulesTable.find;
-        frn.success frn2.success or [
-          ("duplicate use module: " string) assembleString compilerError
-        ] [
-          fr.value asUse processUseModule
-        ] if
-      ] [
-        TRUE dynamic @processorResult.@findModuleFail set
-        string @processorResult.@errorInfo.@missedModule set
-        ("module not found: " string) assembleString compilerError
-      ] if
+      VarString varName.data.get asUse useOrIncludeModuleName
     ]
   ) sequence
+];
+
+declareModuleName: [
+  force:;
+  string:;
+  ("declare module " string) addLog
+  upstring: string upString;
+  fr2: upstring @processor.@capsModuleNames.find;
+  fr2.success [fr2.value 0 < not] && [
+    string ".main" = [
+      ("only one file without module name allowed") assembleString compilerError
+    ] [
+      ("duplicate declaration of module: " string) assembleString compilerError
+    ] if
+  ] [
+    fr2.success [
+      indexOfNode @fr2.@value set
+      fr: string @processor.@modules.find;
+      fr.success [fr.value 0 <] && [
+        indexOfNode @fr.@value set
+      ] [
+        [FALSE] "moduleNames doesnt match capsModuleNames!" assert
+      ] if
+    ] [
+      upstring indexOfNode @processor.@capsModuleNames.insert
+      string   indexOfNode @processor.@modules.insert
+    ] if
+
+    force [string isValidModuleName] || [
+      currentNode.moduleName.getTextSize 0 = [
+        string @currentNode.@moduleName set
+      ] [
+        "duplicate named module" compilerError
+      ] if
+    ] [
+      "invalid module name" compilerError
+    ] if
+  ] if
 ];
 
 getStackEntryWith: [
@@ -229,4 +264,46 @@ findNameInfo: [
 
     result
   ] if
+];
+
+isValidModuleName: [
+  name: makeStringView.split.chars;
+  name.getSize 0 > [
+    result: TRUE dynamic;
+    name [
+      pair:;
+      current: pair.value;
+      result [
+        code8: current stringMemory Nat8 addressToReference Nat32 cast;
+        pair.index 0 > [
+          code8 ascii.dot =
+          [code8 ascii.underline =] ||
+          [code8 ascii.zero < not code8 ascii.nine > not and] ||
+        ] &&
+        [code8 ascii.aCode < not code8 ascii.zCode > not and] ||
+        [code8 ascii.aCodeBig < not code8 ascii.zCodeBig > not and] || not [
+          FALSE !result
+        ] when
+      ] when
+    ] each
+    
+    result copy
+  ] &&
+];
+
+upString: [
+  result: String;
+  @result.makeNZ
+  makeStringView.split.chars [
+    symbol: .value;
+    code8: symbol stringMemory Nat8 addressToReference Nat32 cast;
+    code8 ascii.aCode < not code8 ascii.zCode > not and [
+      code8 ascii.aCodeBig + ascii.aCode - @result.catAsciiSymbolCodeNZ
+    ] [
+      symbol @result.catNZ
+    ] if
+  ] each
+  @result.makeZ
+
+  @result
 ];

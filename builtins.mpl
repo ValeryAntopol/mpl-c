@@ -26,12 +26,15 @@ builtins: (
   {name: "ceil"                    ; impl: @mplBuiltinCeil                    ;}
   {name: "codeRef"                 ; impl: @mplBuiltinCodeRef                 ;}
   {name: "cos"                     ; impl: @mplBuiltinCos                     ;}
+  #{name: "cref"                    ; impl: @mplBuiltinCref                    ;}
   {name: "compileOnce"             ; impl: @mplBuiltinCompileOnce             ;}
   {name: "COMPILER_VERSION"        ; impl: @mplBuiltinCompilerVersion         ;}
   {name: "const"                   ; impl: @mplBuiltinConst                   ;}
   {name: "copy"                    ; impl: @mplBuiltinCopy                    ;}
   {name: "DEBUG"                   ; impl: @mplBuiltinDebug                   ;}
   {name: "def"                     ; impl: @mplBuiltinDef                     ;}
+  #{name: "deref"                   ; impl: @mplBuiltinDeref                   ;}
+  #{name: "dirty"                   ; impl: @mplBuiltinDirty                   ;}
   {name: "dynamic"                 ; impl: @mplBuiltinDirty                   ;}
   {name: "exportFunction"          ; impl: @mplBuiltinExportFunction          ;}
   {name: "exportVariable"          ; impl: @mplBuiltinExportVariable          ;}
@@ -41,8 +44,6 @@ builtins: (
   {name: "fieldIndex"              ; impl: @mplBuiltinFieldIndex              ;}
   {name: "fieldName"               ; impl: @mplBuiltinFieldName               ;}
   {name: "floor"                   ; impl: @mplBuiltinFloor                   ;}
-  {name: "getCallTrace"            ; impl: @mplBuiltinGetCallTrace            ;}
-  {name: "getSchema"               ; impl: @mplBuiltinGetSchema               ;}
   {name: "has"                     ; impl: @mplBuiltinHas                     ;}
   {name: "HAS_LOGS"                ; impl: @mplBuiltinHasLogs                 ;}
   {name: "if"                      ; impl: @mplBuiltinIf                      ;}
@@ -73,6 +74,7 @@ builtins: (
   {name: "printStackTrace"         ; impl: @mplBuiltinPrintStackTrace         ;}
   {name: "printVariableCount"      ; impl: @mplBuiltinPrintVariableCount      ;}
   {name: "recursive"               ; impl: @mplBuiltinRecursive               ;}
+  #{name: "ref"                    ; impl: @mplBuiltinRef                    ;}
   {name: "rshift"                  ; impl: @mplBuiltinRShift                  ;}
   {name: "same"                    ; impl: @mplBuiltinSame                    ;}
   {name: "schema"                  ; impl: @mplBuiltinSchema                  ;}

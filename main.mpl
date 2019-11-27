@@ -15,7 +15,6 @@ printInfo: [
   "  -D <name[ =value]>  Define global name with value, default value is ()" print LF print
   "  -array_checks 0|1   Turn off/on array index checks, by default it is on in debug mode and off in release mode" print LF print
   "  -auto_recursion     Make all code block recursive-by-default" print LF print
-  "  -call_trace         Generate information about call trace" print LF print
   "  -dynalit            Number literals are dynamic constants, which are not used in analysis; default mode is static literals" print LF print
   "  -linker_option      Add linker option for LLVM" print LF print
   "  -logs               Value of \"HAS_LOGS\" constant in code turn to TRUE" print LF print
@@ -81,28 +80,27 @@ createDefinition: [
 
     success: TRUE dynamic;
 
-    OPT_ANY:                [0 dynamic];
-    OPT_OUTPUT_FILE_NAME:   [1 dynamic];
-    OPT_LINKER_OPTION:      [3 dynamic];
-    OPT_DEFINITION:         [4 dynamic];
-    OPT_ARRAY_CHECK:        [5 dynamic];
-    OPT_CALL_TRACE:         [6 dynamic];
-    nextOption: OPT_ANY;
+    optAny:            [0 dynamic];
+    optOutputFileName: [1 dynamic];
+    optIncrBuild:      [2 dynamic];
+    optLinkerOption:   [3 dynamic];
+    optDefinition:     [4 dynamic];
+    optArrayCheck:     [5 dynamic];
+    nextOption: optAny;
 
     options: ProcessorOptions;
     hasVersion: FALSE dynamic;
     parserResults: ParserResults;
     definitions: String;
     hasVersion: FALSE dynamic;
-    outputFileName: "mpl.ll" toString;
+    outputFileName: String;
 
     forceArrayChecks: -1 dynamic;
-    forceCallTrace: -1 dynamic;
 
     "*definitions" toString @options.@fileNames.pushBack
 
     argc 1 = [
-      FALSE @success set
+      printInfo
     ] [
       argc [
         i 0 = [
@@ -114,15 +112,15 @@ createDefinition: [
 
           option textSize 0nx = [
             "Error, argument cannot be empty" print LF print
-            FALSE @success set
+            printInfo
           ] [
             splittedOption: option.split;
             splittedOption.success not [
               "Invalid argument encoding: " print option print LF print
-              FALSE @success set
+              printInfo
             ] [
               nextOption (
-                OPT_ANY [
+                optAny [
                   option (
                     "-auto_recursion" [TRUE              @options.!autoRecursion]
                     "-ndebug"         [FALSE             @options.!debug]
@@ -132,56 +130,48 @@ createDefinition: [
                     "-32bits"         [32nx              @options.!pointerSize]
                     "-64bits"         [64nx              @options.!pointerSize]
                     "-verbose_ir"     [TRUE              @options.!verboseIR]
-                    "-version"        [TRUE                 !hasVersion]
-                    "-linker_option"  [OPT_LINKER_OPTION    !nextOption]
-                    "-o"              [OPT_OUTPUT_FILE_NAME !nextOption]
-                    "-D"              [OPT_DEFINITION       !nextOption]
-                    "-array_checks"   [OPT_ARRAY_CHECK      !nextOption]
-                    "-call_trace"     [OPT_CALL_TRACE       !nextOption]
+                    "-version"        [TRUE              !hasVersion]
+                    "-linker_option"  [optLinkerOption   !nextOption]
+                    "-o"              [optOutputFileName !nextOption]
+                    "-incrBuild"      [optIncrBuild      !nextOption]
+                    "-D"              [optDefinition     !nextOption]
+                    "-array_checks"   [optArrayCheck     !nextOption]
                     [
                       0 splittedOption.chars.at "-" = [
                         "Invalid argument: " print option print LF print
-                        FALSE @success set
+                        printInfo
                       ] [
                         option toString @options.@fileNames.pushBack
                       ] if
                     ]
                   ) case
                 ]
-                OPT_OUTPUT_FILE_NAME [
+                optOutputFileName [
                   option toString @outputFileName set
-                  OPT_ANY !nextOption
+                  optAny !nextOption
                 ]
-                OPT_LINKER_OPTION   [
+                optIncrBuild      [
+                  option toString @options.@incrBuildDir set
+                  optAny !nextOption
+                ]
+                optLinkerOption   [
                   option toString @options.@linkerOptions.pushBack
-                  OPT_ANY !nextOption
+                  optAny !nextOption
                 ]
-                OPT_DEFINITION     [
+                optDefinition     [
                   splittedOption createDefinition
-                  OPT_ANY !nextOption
+                  optAny !nextOption
                 ]
-                OPT_ARRAY_CHECK     [
+                optArrayCheck     [
                   option (
                     "0"   [0 @forceArrayChecks set]
                     "1"   [1 @forceArrayChecks set]
                     [
                       "Invalid argument value: " print option print LF print
-                      FALSE @success set
+                      printInfo
                     ]
                   ) case
-                  OPT_ANY !nextOption
-                ]
-                OPT_CALL_TRACE     [
-                  option (
-                    "0"   [0 @forceCallTrace set]
-                    "1"   [1 @forceCallTrace set]
-                    "2"   [2 @forceCallTrace set]
-                    [
-                      "Invalid argument value: " print option print LF print
-                      FALSE @success set
-                    ]
-                  ) case
-                  OPT_ANY !nextOption
+                  optAny !nextOption
                 ]
                 []
               ) case
@@ -191,47 +181,27 @@ createDefinition: [
       ] times
     ] if
 
-    nextOption OPT_ANY = not [
+    nextOption optAny = not [
       "Value expected" print LF print
-      FALSE @success set
-    ] when
+      printInfo
+    ] [
+      forceArrayChecks (
+        0 [FALSE]
+        1 [TRUE]
+        [options.debug copy]
+      ) case @options.@arrayChecks set
 
-    outputFileName "" = [
-      "No output file" print LF print
-      FALSE @success set
-    ] when
-
-    options.fileNames.getSize 1 = [
-      hasVersion [
-        DEBUG [
-          ("MPL compiler version " COMPILER_SOURCE_VERSION " debug" LF) printList
+      options.fileNames.getSize 1 = [
+        hasVersion [
+          DEBUG [
+            ("MPL compiler version " COMPILER_SOURCE_VERSION " debug" LF) printList
+          ] [
+            ("MPL compiler version " COMPILER_SOURCE_VERSION LF) printList
+          ] if
         ] [
-          ("MPL compiler version " COMPILER_SOURCE_VERSION LF) printList
+          "No input files" print LF print
         ] if
       ] [
-        "No input files" print LF print
-        FALSE @success set
-        printInfo
-      ] if
-    ] [
-      success not [
-        printInfo
-      ] [
-        forceArrayChecks (
-          0 [FALSE]
-          1 [TRUE]
-          [options.debug copy]
-        ) case @options.@arrayChecks set
-
-        forceCallTrace (
-          0 [FALSE]
-          1 [TRUE]
-          2 [TRUE]
-          [options.debug copy]
-        ) case @options.@callTrace set
-
-        forceCallTrace 2 = [1 @options.@threadModel set] when
-
         hasVersion [
           ("MPL compiler version " COMPILER_SOURCE_VERSION LF) printList
           "Input files ignored" print LF print
@@ -266,15 +236,32 @@ createDefinition: [
             options.fileNames [(.value) addLog] each
 
             processorResult: ProcessorResult;
-            multiParserResult options 0 @processorResult process
-            processorResult.success [
-              outputFileName @processorResult.@program saveString [
-                ("program written to " outputFileName) addLog
-              ] [
-                ("failed to save program" LF) printList
-                FALSE @success set
-              ] if
-            ] when
+            options.incrBuildDir "" = [
+              multiParserResult options @processorResult rebuild
+              processorResult.success [
+                outputFileName @processorResult.@programs.last.text saveString [
+                  ("program written to " outputFileName) addLog
+                ] [
+                  ("failed to save program" LF) printList
+                  FALSE @success set
+                ] if
+              ] when
+            ] [
+              multiParserResult options @processorResult incrementalBuild
+              processorResult.success [
+                @processorResult.@programs [
+                  pair:;
+                  v: pair.value;
+                  moduleFileName: (options.incrBuildDir "/" v.name ".ll") assembleString;
+                  moduleFileName v.text saveString [
+                    ("module " pair.index " written to " moduleFileName) addLog
+                  ] [
+                    ("failed to save module" LF) printList
+                    FALSE @success set
+                  ] if
+                ] each
+              ] when
+            ] if
 
             processorResult.success not [
               processorResult.globalErrorInfo [

@@ -73,8 +73,6 @@ mplNumberBinaryOp: [
           ] when
         ] staticCall
       ] [
-        arg1 makeVarRealCaptured
-        arg2 makeVarRealCaptured
         opName: arg1 arg2 @getOpName call;
         var1.data.getTag firstTag lastTag [
           copy tag:;
@@ -159,9 +157,6 @@ mplNumberBinaryOp: [
           ] staticCall
         ] if
       ] [
-        arg1 makeVarRealCaptured
-        arg2 makeVarRealCaptured
-
         var1.data.getTag VarString = [
           result: FALSE VarCond createVariable Dynamic makeStaticness createAllocIR;
           "icmp eq" makeStringView createBinaryOperation
@@ -228,7 +223,6 @@ mplNumberUnaryOp: [
           ] when
         ] staticCall
       ] [
-        arg makeVarRealCaptured
         opName: arg @getOpName call;
         mopName: arg @getMidOpName call;
         var.data.getTag firstTag lastTag [
@@ -273,7 +267,8 @@ mplNumberUnaryOp: [
 ] "mplBuiltinFalse" @declareBuiltin ucall
 
 [
-  LF toString makeVarString push
+  s: LF toString;
+  s VarString createVariable createStringIR push
 ] "mplBuiltinLF" @declareBuiltin ucall
 
 [
@@ -309,7 +304,6 @@ mplNumberBuiltinOp: [
           ] when
         ] staticCall
       ] [
-        arg makeVarRealCaptured
         opName: arg @getOpName call;
         var.data.getTag VarReal32 VarReal64 1 + [
           copy tag:;
@@ -414,9 +408,6 @@ mplNumberBuiltinOp: [
           ] when
         ] staticCall
       ] [
-        arg1 makeVarRealCaptured
-        arg2 makeVarRealCaptured
-
         var1.data.getTag VarReal32 VarReal64 1 + [
           copy tag:;
           resultType: tag copy;
@@ -482,9 +473,6 @@ mplShiftBinaryOp: [
           ] staticCall
         ] staticCall
       ] [
-        arg1 makeVarRealCaptured
-        arg2 makeVarRealCaptured
-
         opName: arg1 arg2 @getOpName call;
         var1.data.getTag VarNat8 VarIntX 1 + [
           copy tag:;
@@ -521,7 +509,7 @@ mplShiftBinaryOp: [
   refToVar: pop;
   compilable [
     refToVar getVar.data.getTag VarRef = [
-      refToVar isSchema [
+      refToVar isVirtualRef [
         "can not deref virtual-reference" makeStringView compilerError
       ] [
         refToVar getPointee push
@@ -542,14 +530,12 @@ mplShiftBinaryOp: [
   compilable [
     varCode: code getVar;
 
-    varCode.data.getTag VarCode = not ["branch else must be a [CODE]" compilerError] when
+    varCode.data.getTag VarCode = not ["branch else must be a [CODE]" makeStringView compilerError] when
 
     compilable [
       codeIndex: VarCode varCode.data.get.index copy;
       astNode: codeIndex @multiParserResult.@memory.at;
       [astNode.data.getTag AstNodeType.Code =] "Not a code!" assert
-      currentNode.countOfUCall 1 + @currentNode.@countOfUCall set
-      currentNode.countOfUCall 65535 > ["ucall limit exceeded" compilerError] when
       indexArray: AstNodeType.Code astNode.data.get;
       indexArray addIndexArrayToProcess
     ] when
@@ -593,7 +579,7 @@ mplBuiltinProcessAtList: [
     structVar: refToStruct getVar;
     indexVar: refToIndex getVar;
 
-    refToStruct isSchema [
+    refToStruct isVirtualRef [
 
       (
         [compilable]
@@ -610,7 +596,7 @@ mplBuiltinProcessAtList: [
           index 0 < [index struct.fields.getSize < not] || ["index is out of bounds" compilerError] when
         ] [
           field: index struct.fields.at.refToVar;
-          field VarRef TRUE dynamic TRUE dynamic TRUE dynamic createVariableWithVirtual @result set
+          field VarRef TRUE dynamic TRUE dynamic createVariableWithVirtual @result set
           refToStruct.mutable @result.@mutable set
           result fullUntemporize
         ]
@@ -629,23 +615,22 @@ mplBuiltinProcessAtList: [
                 realRefToStruct: refToStruct;
                 realStructVar: structVar;
                 realStruct: struct;
-                refToStruct staticnessOfVar Virtual < not [
+                refToStruct staticnessOfVar Virtual = [
                   "can't get dynamic index in virtual struct" compilerError
                 ] when
 
-                refToIndex makeVarRealCaptured
-                firstField: 0 realStruct.fields.at.refToVar;
-                fieldRef: firstField copyVarFromParent;
-                firstField.hostId indexOfNode = not [
+                fieldRef: 0 realStruct.fields.at.refToVar copy;
+                fieldRef.hostId indexOfNode = not [
                   fBegin: RefToVar;
                   fEnd: RefToVar;
                   fieldRef @fBegin @fEnd ShadowReasonField makeShadowsDynamic
                   fEnd @fieldRef set
                 ] when
 
+                fieldRef copyVar @fieldRef set
                 refToStruct.mutable @fieldRef.@mutable set
                 fieldRef fullUntemporize
-                fieldRef staticnessOfVar Virtual < not [
+                fieldRef staticnessOfVar Virtual = [
                   "dynamic index is combined of virtuals" compilerError
                 ] [
                   fieldRef makeVarTreeDynamicStoraged
@@ -743,8 +728,6 @@ mplBuiltinProcessAtList: [
         codeIndex: value [VarCode varThen.data.get.index copy] [VarCode varElse.data.get.index copy] if;
         astNode: codeIndex @multiParserResult.@memory.at;
         [astNode.data.getTag AstNodeType.Code =] "Not a code!" assert
-        currentNode.countOfUCall 1 + @currentNode.@countOfUCall set
-        currentNode.countOfUCall 65535 > ["ucall limit exceeded" compilerError] when
         indexArray: AstNodeType.Code astNode.data.get;
         indexArray addIndexArrayToProcess
       ] [
@@ -811,17 +794,11 @@ parseSignature: [
             ) sequence
           ]
           processor.conventionNameInfo [
-            conventionRefToVarRef: f.refToVar;
-            conventionVarRef: conventionRefToVarRef getVar;
+            conventionRefToVar: f.refToVar;
+            conventionVar: conventionRefToVar getVar;
             (
               [compilable]
-              [conventionVarRef.data.getTag VarRef = not ["value must be String Ref" compilerError] when]
-              [conventionRefToVarRef staticnessOfVar Weak < ["value must be Static" compilerError] when]
-              [
-                conventionRefToVar: VarRef conventionVarRef.data.get;
-                conventionVar: conventionRefToVar getVar;
-                conventionVar.data.getTag VarString = not ["value must be String Ref" compilerError] when
-              ]
+              [conventionVar.data.getTag VarString = not ["value must be String" compilerError] when]
               [conventionRefToVar staticnessOfVar Weak < ["value must be Static" compilerError] when]
               [
                 string: VarString conventionVar.data.get;
@@ -851,7 +828,7 @@ parseSignature: [
           returnVar.temporary [
             return @result.@outputs.pushBack
           ] [
-            return TRUE dynamic createRef @result.@outputs.pushBack
+            return return.mutable createRef @result.@outputs.pushBack
           ] if
         ] if
       ] when
@@ -901,7 +878,7 @@ parseSignature: [
       refToVar isVirtual ["cannot export virtual var" compilerError] when
     ] [
       refToVar getVar.temporary not [
-        refToVar TRUE dynamic createRef @refToVar set
+        refToVar refToVar.mutable createRef @refToVar set
       ] when
       var: refToVar getVar;
       FALSE @var.@temporary set
@@ -951,14 +928,22 @@ parseSignature: [
     [compilable]
     [signature: parseSignature;]
     [
-      name: ("null." processor.nodes.getSize) assembleString;
+      name: String;
+      processor.unitId 0 < not [
+        ("\"null." processor.unitId processor.options.fileNames.at getStringImplementation "." currentNode.lastLambdaName "\"") assembleString @name set
+      ] [
+        ("null." indexOfNode "." currentNode.lastLambdaName) assembleString @name set
+      ] if
+      currentNode.lastLambdaName 1 + @currentNode.@lastLambdaName set
       index: signature name makeStringView TRUE dynamic processImportFunction;
     ]
     [
+      #refToVar: index processor.nodes.at.get.refToVar;
       nullNode: index processor.nodes.at.get;
       gnr: nullNode.varNameInfo getName;
       cnr: gnr captureName;
       refToVar: cnr.refToVar copy;
+      #("coderef captured var=" refToVar.hostId ":" refToVar.varId " s=" refToVar staticnessOfVar) addLog
 
       refToVar push
     ]
@@ -981,7 +966,7 @@ parseSignature: [
             "variable cant be virtual" compilerError
           ] [
             varType.temporary not [
-              refToType TRUE dynamic createRef @refToType set
+              refToType refToType.mutable createRef @refToType set
             ] when
 
             name: VarString varName.data.get;
@@ -1011,27 +996,21 @@ parseSignature: [
 [
   refToVar: pop;
   compilable [
-    refToVar isVirtual not [refToVar makeVarRealCaptured] when
-
     refToVar getVar.temporary [
       "temporary objects cannot be copied" compilerError
     ] [
       refToVar getVar.data.getTag VarImport = [
         "functions cannot be copied" compilerError
       ] [
-        refToVar getVar.data.getTag VarString = [
-          "builtin-strings cannot be copied" compilerError
+        result: refToVar copyVarToNew;
+        result isVirtual [
+          result isAutoStruct ["unable to copy virtual autostruct" compilerError] when
         ] [
-          result: refToVar copyVarToNew;
-          result isVirtual [
-            result isAutoStruct ["unable to copy virtual autostruct" compilerError] when
-          ] [
-            TRUE @result.@mutable set
-            refToVar result createCopyToNew
-          ] if
-
-          result push
+          TRUE @result.@mutable set
+          refToVar result createCopyToNew
         ] if
+
+        result push
       ] if
     ] if
   ] when
@@ -1041,7 +1020,7 @@ parseSignature: [
   refToVar: pop;
   compilable [
     result: refToVar copyVarToNew;
-    result isVirtual not [result isUnallocable not] && [
+    result isVirtual not [
       TRUE @result.@mutable set
       result createAllocIR callInit
     ] when
@@ -1055,16 +1034,11 @@ parseSignature: [
   refToVar: pop;
 
   compilable [
-    varSrc: refToVar getVar;
-    varSchema: refToSchema getVar;
-    varSchema.data.getTag VarRef = [refToSchema isVirtual] && [
-      VarRef varSchema.data.get copyVarFromChild @refToSchema set
-      refToSchema getVar !varSchema
-    ] when
-
     refToVar isNumber refToSchema isNumber and [
       compilable [
         refToVar staticnessOfVar Dynamic > [
+          varSrc: refToVar getVar;
+          varSchema: refToSchema getVar;
           refToDst: RefToVar;
 
           varSrc.data.getTag VarNat8 VarReal64 1 + [
@@ -1155,12 +1129,15 @@ parseSignature: [
     [refToVar isVirtual ["variable is virtual, cannot get address" compilerError] when]
     [
       TRUE refToVar getVar.@capturedAsMutable set #we need ref
-      refToVar makeVarRealCaptured
       refToVar makeVarTreeDirty
       refToDst: 0n64 VarNatX createVariable;
       Dynamic @refToDst getVar.@staticness set
       var: refToVar getVar;
-      refToVar refToDst "ptrtoint" makeStringView createCastCopyPtrToNew
+      var.data.getTag VarString = [
+        refToVar refToDst "ptrtoint" makeStringView createCastCopyToNew
+      ] [
+        refToVar refToDst "ptrtoint" makeStringView createCastCopyPtrToNew
+      ] if
       refToDst push
     ]
   ) sequence
@@ -1176,25 +1153,40 @@ parseSignature: [
     var.data.getTag VarNatX = [
       var: refToVar getVar;
       varSchema: refToSchema getVar;
-      schemaOfResult: RefToVar;
-      varSchema.data.getTag VarRef = [
-        refToSchema isSchema [
-          VarRef varSchema.data.get copyVarFromChild @schemaOfResult set
-          refToSchema.mutable schemaOfResult.mutable and @schemaOfResult.@mutable set
-        ] [
-          [FALSE] "Unable in current semantic!" assert
-        ] if
-      ] [
-        refToSchema @schemaOfResult set
-      ] if
+      varSchema.data.getTag VarString = [
+        refToDst: String VarString createVariable;
+        Dirty @refToDst getVar.@staticness set
 
-      schemaOfResult isVirtual [
-        "pointee is virtual, cannot cast" compilerError
-      ] [
-        refToDst: schemaOfResult VarRef createVariable;
-        Dirty refToDst getVar.@staticness set
         refToVar refToDst "inttoptr" makeStringView createCastCopyToNew
-        refToDst derefAndPush
+        refToDst push
+      ] [
+        varSchema.data.getTag VarImport = [
+          refToDst: refToSchema VarRef createVariable;
+          Dynamic @refToDst getVar.@staticness set
+          refToVar refToDst "inttoptr" makeStringView createCastCopyToNew
+          refToDst derefAndPush
+        ] [
+          schemaOfResult: RefToVar;
+          varSchema.data.getTag VarRef = [
+            refToSchema isVirtual [
+              VarRef varSchema.data.get copyVarFromChild @schemaOfResult set
+              refToSchema.mutable schemaOfResult.mutable and @schemaOfResult.@mutable set
+            ] [
+              [FALSE] "Unable in current semantic!" assert
+            ] if
+          ] [
+            refToSchema @schemaOfResult set
+          ] if
+
+          schemaOfResult isVirtual [
+            "pointee is virtual, cannot cast" compilerError
+          ] [
+            refToDst: schemaOfResult VarRef createVariable;
+            Dirty refToDst getVar.@staticness set
+            refToVar refToDst "inttoptr" makeStringView createCastCopyToNew
+            refToDst getPointee derefAndPush
+          ] if
+        ] if
       ] if
     ] [
       "address must be a NatX" compilerError
@@ -1229,23 +1221,7 @@ parseSignature: [
         varName.data.getTag VarString = not ["name must be static string" compilerError] when
         compilable [
           string: VarString varName.data.get;
-          ("declare module " string) addLog
-          fr: string makeStringView @processor.@modules.find;
-          fr.success [fr.value 0 < not] && [
-            ("duplicate declaration of module: " string) assembleString compilerError
-          ] [
-            fr.success [
-              indexOfNode @fr.@value set
-            ] [
-              string indexOfNode @processor.@modules.insert
-            ] if
-
-            currentNode.moduleName.getTextSize 0 = [
-              string @currentNode.@moduleName set
-            ] [
-              "duplicate named module" compilerError
-            ] if
-          ] if
+          string FALSE dynamic declareModuleName
         ] when
       ] when
     ] when
@@ -1259,6 +1235,7 @@ parseSignature: [
   refToName: pop;
   compilable [
     refToName staticnessOfVar Weak < [
+      #"name must be static" compilerError
       result: 0n64 VarNatX createVariable Dynamic makeStaticness createAllocIR;
       refToName result createGetTextSizeIR
       result push
@@ -1288,7 +1265,7 @@ parseSignature: [
       varStr1: refToStr1 getVar;
       varStr1.data.getTag VarString = not ["must be static string" compilerError] when
     ]
-    [(VarString varStr1.data.get VarString varStr2.data.get) assembleString makeVarString push]
+    [(VarString varStr1.data.get VarString varStr2.data.get) assembleString VarString createVariable createStringIR push]
   ) sequence
 ] "mplBuiltinStrCat" @declareBuiltin ucall
 
@@ -1303,15 +1280,19 @@ parseSignature: [
         string: VarString varName.data.get;
         struct: Struct;
 
-        string.chars.dataSize 0 < not [
+        fields: RefToVar Array;
+
+        string.chars.dataSize 0 > [
+
           splitted: string makeStringView.split;
           splitted.success [
             splitted.chars [
               pair:;
-              element: pair.value toString makeVarString;
+              element: pair.value toString VarString createVariable;
+              element @fields.pushBack
               field: Field;
               processor.emptyNameInfo @field.@nameInfo set
-              element TRUE dynamic createRef @field.@refToVar set
+              element @field.@refToVar set
               field @struct.@fields.pushBack
             ] each
 
@@ -1324,17 +1305,17 @@ parseSignature: [
               i resultStruct.fields.dataSize < [
                 field: i resultStruct.fields.at;
 
-                result isGlobal [
+                refToName isGlobal [
                   currentNode.program.dataSize field.refToVar getVar.@allocationInstructionIndex set
                   "no alloc..." makeStringView createComent # fake instruction
 
-                  loadReg: field.refToVar createDerefToRegister;
+                  loadReg: field.refToVar createStringIR createDerefToRegister;
                   field.refToVar unglobalize
                   loadReg field.refToVar createStoreFromRegister
 
                   field.refToVar i result createGEPInsteadOfAlloc
                 ] [
-                  field.refToVar i result createGEPInsteadOfAlloc
+                  field.refToVar createStringIR i result createGEPInsteadOfAlloc
                 ] if
                 i 1 + @i set TRUE
               ] &&
@@ -1422,7 +1403,7 @@ parseSignature: [
   refToVar: pop;
   compilable [
     refToVar isVirtual [
-      refToVar isSchema [
+      refToVar isVirtualRef [
         pointee: VarRef refToVar getVar.data.get;
         pointee isVirtual [
           0nx
@@ -1444,7 +1425,7 @@ parseSignature: [
   refToVar: pop;
   compilable [
     refToVar isVirtual [
-      refToVar isSchema [
+      refToVar isVirtualRef [
         pointee: VarRef refToVar getVar.data.get;
         pointee isVirtual [
           0nx
@@ -1554,7 +1535,7 @@ parseSignature: [
   refToVar: pop;
   compilable [
     var: refToVar getVar;
-    refToVar isSchema [
+    refToVar isVirtualRef [
       pointee: VarRef var.data.get;
       pointeeVar: pointee getVar;
       pointeeVar.data.getTag VarStruct = not ["not a combined" makeStringView compilerError] when
@@ -1575,18 +1556,18 @@ parseSignature: [
   refToVar: pop;
   compilable [
     varCount: refToCount getVar;
-    varCount.data.getTag VarInt32 = not ["index must be Int32" compilerError] when
+    varCount.data.getTag VarInt32 = not ["count must be Int32" compilerError] when
     compilable [
-      refToCount staticnessOfVar Dynamic > not ["index must be static" compilerError] when
+      refToCount staticnessOfVar Dynamic > not ["count must be static" compilerError] when
       compilable [
         count: VarInt32 varCount.data.get 0 cast;
         var: refToVar getVar;
-        refToVar isSchema [
+        refToVar isVirtualRef [
           pointee: VarRef var.data.get;
           pointeeVar: pointee getVar;
           pointeeVar.data.getTag VarStruct = not ["not a combined" compilerError] when
           compilable [
-            count VarStruct pointeeVar.data.get.get.fields.at.nameInfo processor.nameInfos.at.name makeVarString push
+            count VarStruct pointeeVar.data.get.get.fields.at.nameInfo processor.nameInfos.at.name VarString createVariable createStringIR push
           ] when
         ] [
           var.data.getTag VarStruct = not ["not a combined" compilerError] when
@@ -1594,7 +1575,7 @@ parseSignature: [
             struct: VarStruct var.data.get.get;
             count 0 < [count struct.fields.getSize < not] || ["index is out of bounds" compilerError] when
             compilable [
-              count struct.fields.at.nameInfo processor.nameInfos.at.name makeVarString push
+              count struct.fields.at.nameInfo processor.nameInfos.at.name VarString createVariable createStringIR push
             ] when
           ] when
         ] if
@@ -1602,14 +1583,6 @@ parseSignature: [
     ] when
   ] when
 ] "mplBuiltinFieldName" @declareBuiltin ucall
-
-[
-  (
-    [compilable]
-    [refToVar: pop;]
-    [refToVar getMplType toString makeVarString push]
-  ) sequence
-] "mplBuiltinGetSchema" @declareBuiltin ucall
 
 [
   COMPILER_SOURCE_VERSION 0i64 cast VarInt32 createVariable Static makeStaticness createPlainIR push
@@ -1677,60 +1650,6 @@ parseSignature: [
     ] when
   ] when
 ] "mplBuiltinArray" @declareBuiltin ucall
-
-[
-  varPrev:   0n64 VarNatX createVariable;
-  varNext:   0n64 VarNatX createVariable;
-  varName:   String makeVarString TRUE dynamic createRefNoOp;
-  varLine:   0i64 VarInt32 createVariable;
-  varColumn: 0i64 VarInt32 createVariable;
-
-  varPrev   makeVarDirty
-  varNext   makeVarDirty
-  varName   makeVarDirty
-  varLine   makeVarDirty
-  varColumn makeVarDirty
-
-  struct: Struct;
-  5 @struct.@fields.resize
-
-  varPrev             0 @struct.@fields.at.@refToVar set
-  "prev" findNameInfo 0 @struct.@fields.at.@nameInfo set
-
-  varNext             1 @struct.@fields.at.@refToVar set
-  "next" findNameInfo 1 @struct.@fields.at.@nameInfo set
-
-  varName             2 @struct.@fields.at.@refToVar set
-  "name" findNameInfo 2 @struct.@fields.at.@nameInfo set
-
-  varLine             3 @struct.@fields.at.@refToVar set
-  "line" findNameInfo 3 @struct.@fields.at.@nameInfo set
-  
-  varColumn             4 @struct.@fields.at.@refToVar set
-  "column" findNameInfo 4 @struct.@fields.at.@nameInfo set
-
-  first: @struct move owner VarStruct createVariable;
-  last: first copyVar;
-
-  firstRef: first FALSE dynamic createRefNoOp;
-  lastRef:  last  FALSE dynamic createRefNoOp;
-
-  firstRef makeVarDirty
-  lastRef  makeVarDirty
-
-  resultStruct: Struct;
-  2 @resultStruct.@fields.resize
-
-  firstRef             0 @resultStruct.@fields.at.@refToVar set
-  "first" findNameInfo 0 @resultStruct.@fields.at.@nameInfo set
-
-  lastRef             1 @resultStruct.@fields.at.@refToVar set
-  "last" findNameInfo 1 @resultStruct.@fields.at.@nameInfo set
-
-  result: @resultStruct move owner VarStruct createVariable createAllocIR;
-  first getIrType result getIrType result createGetCallTrace
-  result push
-] "mplBuiltinGetCallTrace" @declareBuiltin ucall
 
 [
   refToVar: pop;

@@ -53,6 +53,7 @@ AstNode: [{
   line:      -1 dynamic;
   offset:    -1 dynamic;
   fileNumber: 0 dynamic;
+  shaHash:    Nat8 20 array;
   data: (
     Cond                 #EmptyNode:
     NamedRecursiveBranch #LabelNode:
@@ -100,6 +101,7 @@ ParserResult: [{
   };
   memory: AstNode Array;
   nodes: IndexArray;
+  shaHash: Nat8 20 array;
 
   INIT: []; DIE: []; # default life control, and ban uneffective copy, because object is too big
 }];
@@ -110,6 +112,8 @@ MultiParserResult: [{
   names: String Int32 HashTable;
   memory: AstNode Array;
   nodes: IndexArray Array; # order of going is not defined before compiling
+  offsets: Int32 Array;
+  shaHashes: Nat8 20 array Array;
 
   INIT: []; DIE: []; # default life control, and ban uneffective copy, because object is too big
 }];

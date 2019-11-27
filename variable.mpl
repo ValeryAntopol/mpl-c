@@ -13,7 +13,6 @@ Dynamic:         [1n8 dynamic];
 Weak:            [2n8 dynamic];
 Static:          [3n8 dynamic];
 Virtual:         [4n8 dynamic];
-Schema:          [5n8 dynamic];
 
 NameCaseInvalid:               [ 0n8 dynamic];
 NameCaseBuiltin:               [ 1n8 dynamic];
@@ -44,6 +43,12 @@ RefToVar: [{
   mutable: TRUE dynamic;
 }];
 
+StringNameAndOverload: [{
+  STRING_NAME_AND_OVERLOAD: ();
+  name: String;
+  overload: Int32;
+}];
+
 =: ["REF_TO_VAR" has] [
   refsAreEqual
 ] pfunc;
@@ -58,11 +63,21 @@ hash: ["REF_TO_VAR" has] [
   l.index r.index =
 ] pfunc;
 
+=: ["STRING_NAME_AND_OVERLOAD" has] [
+  left:right:;;
+  left.name right.name = 
+  left.overload right.overload = and
+] pfunc;
+
+hash: ["STRING_NAME_AND_OVERLOAD" has] [
+  v:;
+  v.name hash v.overload hash xor
+] pfunc;
+
 NameInfoEntry: [{
   refToVar: RefToVar;
   startPoint: -1 dynamic; # id of node
   nameCase: NameCaseInvalid;
-  index: -1 dynamic; # for NameCaseSelfMember
 }];
 
 Overload: [NameInfoEntry Array];
@@ -113,6 +128,7 @@ Struct: [{
   forgotten:     TRUE  dynamic;
   realFieldIndexes: Int32 Array;
   fields: FieldArray;
+  structName: NameWithOverload; # for overloads
   structStorageSize: 0nx dynamic;
   structAlignment: 0nx dynamic;
 }]; #IDs of pointee vars
@@ -125,35 +141,36 @@ CodeNodeInfo: [{
   line: Int32;
   column: Int32;
   index: Int32;
+  relativeIndex: Int32;
+  shaHash: Nat8 20 array;
 }];
 
 Variable: [{
   VARIABLE: ();
 
-  mplNameId:                         -1 dynamic;
-  irNameId:                          -1 dynamic;
-  mplTypeId:                         -1 dynamic;
-  irTypeId:                          -1 dynamic;
-  dbgTypeId:                         -1 dynamic;
-  storageStaticness:                 Static;
-  staticness:                        Static;
-  global:                            FALSE dynamic;
-  temporary:                         TRUE dynamic;
-  usedInHeader:                      FALSE dynamic;
-  capturedAsMutable:                 FALSE dynamic;
-  capturedAsRealValue:               FALSE dynamic;
-  tref:                              TRUE dynamic;
-  shadowReason:                      ShadowReasonNo;
-  globalId:                          -1 dynamic;
-  shadowBegin:                       RefToVar;
-  shadowEnd:                         RefToVar;
-  capturedHead:                      RefToVar;
-  capturedTail:                      RefToVar;
-  capturedPrev:                      RefToVar;
-  realValue:                         RefToVar;
+  mplNameId: -1 dynamic;
+  irNameId: -1 dynamic;
+  mplTypeId: -1 dynamic;
+  irTypeId: -1 dynamic;
+  dbgTypeId: -1 dynamic;
+  storageStaticness: Static;
+  staticness: Static;
+  global: FALSE dynamic;
+  temporary: TRUE dynamic;
+  usedInHeader: FALSE dynamic;
+  capturedAsMutable: FALSE dynamic;
+  tref: TRUE dynamic;
+  shadowReason: ShadowReasonNo;
+  globalId: -1 dynamic;
+  shadowBegin: RefToVar;
+  shadowEnd: RefToVar;
+  capturedHead: RefToVar;
+  capturedTail: RefToVar;
+  capturedPrev: RefToVar;
+  realValue: RefToVar;
   globalDeclarationInstructionIndex: -1 dynamic;
-  allocationInstructionIndex:        -1 dynamic;
-  getInstructionIndex:               -1 dynamic;
+  allocationInstructionIndex: -1 dynamic;
+  getInstructionIndex: -1 dynamic;
 
   data: (
     Nat8             #VarInvalid
@@ -203,7 +220,7 @@ compilerError:         [makeStringView multiParserResult @currentNode indexOfNod
   processorResult: ProcessorResult Ref;
   nodeCase: NodeCaseCode;
   parentIndex: 0;
-  functionName: StringView Cref;
+ tionName: StringView Cref;
 } 0 {convention: cdecl;} "astNodeToCodeNode" importFunction
 
 {
@@ -345,7 +362,7 @@ compilerError:         [makeStringView multiParserResult @currentNode indexOfNod
   message: StringView Cref;
 } () {convention: cdecl;} "compilerErrorImpl" importFunction
 
-# these functions require capture "processor"
+# thesetions require capture "processor"
 variableIsDeleted: [
   refToVar:;
   refToVar.varId refToVar.hostId @processor.@nodes.at.get.@variables.at.assigned not
@@ -379,7 +396,7 @@ getVar: [
 ];
 
 getNameById: [processor.nameBuffer.at makeStringView];
-getMplName:  [getVar.mplNameId processor.nameInfos.at.name makeStringView];
+getMplName:  [getVar.mplNameId getNameById];
 getIrName:   [getVar.irNameId getNameById];
 getMplType:  [getVar.mplTypeId getNameById];
 getIrType:   [getVar.irTypeId getNameById];
@@ -456,6 +473,7 @@ refsAreEqual: [
 variablesAreSame: [
   refToVar1:;
   refToVar2:;
+  #refToVar1 getVar.mplType makeStringView refToVar2 getVar.mplType makeStringView stringCompare
   refToVar1 getVar.mplTypeId refToVar2 getVar.mplTypeId = # id compare better than string compare!
 ];
 
@@ -480,7 +498,7 @@ isNat: [
 isAnyInt: [
   refToVar:;
   refToVar isInt
-  [refToVar isNat] ||
+  [ refToVar isNat ] ||
 ];
 
 isReal: [
@@ -508,13 +526,8 @@ isTinyArg: [
   refToVar isPlain [
     var: refToVar getVar;
     var.data.getTag VarRef =
+    [var.data.getTag VarString =] ||
   ] ||
-];
-
-isUnallocable: [
-  var: getVar;
-  var.data.getTag VarString =
-  [var.data.getTag VarImport =] ||
 ];
 
 isStruct: [
@@ -598,10 +611,7 @@ getSingleDataStorageSize: [
     VarReal32  [4nx]
     VarReal64  [8nx]
     VarRef     [processor.options.pointerSize 8nx /]
-    VarString  [
-      "strings dont have storageSize and alignment" compilerError
-      0nx
-    ]
+    VarString  [processor.options.pointerSize 8nx /]
     VarImport  [
       "functions dont have storageSize and alignment" compilerError
       0nx
@@ -705,7 +715,7 @@ getNonrecursiveDataIRType: [
     result: String;
     var: refToVar getVar;
     var.data.getTag VarString = [
-      "i8" toString @result set
+      "i8*" toString @result set
     ] [
       var.data.getTag VarImport = [
         VarImport var.data.get getFuncIrType toString @result set
@@ -740,35 +750,6 @@ getNonrecursiveDataMPLType: [
         ] [
           var.data.getTag VarImport = [
             ("F" VarImport var.data.get getFuncMplType) assembleString @result set
-          ] [
-            "Unknown nonrecursive struct" makeStringView compilerError
-          ] if
-        ] if
-      ] if
-    ] if
-    @result
-  ] if
-];
-
-getNonrecursiveDataDBGType: [
-  compileOnce
-  refToVar:;
-  refToVar isPlain [
-    refToVar getPlainDataMPLType
-  ] [
-    result: String;
-    var: refToVar getVar;
-    var.data.getTag VarString = [
-      "s" toString @result set
-    ] [
-      var.data.getTag VarCode = [
-        "c" toString @result set
-      ] [
-        var.data.getTag VarBuiltin = [
-          "b" toString @result set
-        ] [
-          var.data.getTag VarImport = [
-            ("F" VarImport var.data.get getFuncDbgType) assembleString @result set
           ] [
             "Unknown nonrecursive struct" makeStringView compilerError
           ] if
@@ -894,10 +875,10 @@ fullUntemporize: [
   ] when
 ];
 
-isSchema: [
+isVirtualRef: [
   refToVar:;
   var: refToVar getVar;
-  var.data.getTag VarRef = [var.staticness Schema =] &&
+  var.data.getTag VarRef = [var.staticness Virtual =] &&
 ];
 
 isVirtualType: [
@@ -905,29 +886,31 @@ isVirtualType: [
 
   var: refToVar getVar;
   var.data.getTag VarBuiltin =
+  #[var.data.getTag VarImport =] ||
   [var.data.getTag VarCode =] ||
   [var.data.getTag VarStruct = [VarStruct var.data.get.get.fullVirtual copy] &&] ||
-  [refToVar isSchema] ||
+  [refToVar isVirtualRef] ||
 ];
 
 isVirtual: [
   refToVar:;
 
   var: refToVar getVar;
-  var.staticness Virtual < not
+  var.staticness Virtual =
   [refToVar isVirtualType] ||
 ];
 
 noMatterToCopy: [
   refToVar:;
   refToVar isVirtual [refToVar isAutoStruct not] &&
+  #ref r:; FALSE
 ];
 
 isVirtualField: [
   refToVar:;
 
   var: refToVar getVar;
-  var.staticness Virtual < not
+  var.staticness Virtual =
   [refToVar isVirtualType] ||
 ];
 
@@ -946,7 +929,6 @@ getVirtualValue: [
   recursive
   var: refToVar getVar;
   result: String;
-
   var.data.getTag (
     VarStruct [
       "{" @result.cat
@@ -955,33 +937,22 @@ getVirtualValue: [
       struct.fields [
         pair:;
         pair.index 0 > ["," @result.cat] when
-        pair.value.refToVar isVirtualField not [
-          pair.value.refToVar getVirtualValue @result.cat
-        ] when
+        pair.value.refToVar getVirtualValue @result.cat
       ] each
       "}" @result.cat
+    ]
+
+    VarString  [
+      string: VarString var.data.get;
+      (string textSize "_" string getStringImplementation) @result.catMany
     ]
     VarCode    [
       info: VarCode    var.data.get;
       ("\"" info.moduleId processor.options.fileNames.at getStringImplementation "\"/" info.line ":" info.column) @result.catMany
     ]
+    VarImport  [VarImport  var.data.get @result.cat]
     VarBuiltin [VarBuiltin var.data.get @result.cat]
-    VarRef     [
-      pointee: VarRef var.data.get;
-      pointeeVar: pointee getVar;
-      var.staticness Schema = [
-        "." @result.cat
-      ] [
-        pointeeVar.data.getTag (
-          VarString  [
-            string: VarString pointeeVar.data.get;
-            (string textSize "_" string getStringImplementation) @result.catMany
-          ]
-          VarImport  [VarImport  pointeeVar.data.get @result.cat]
-          [[FALSE] "Wrong type for virtual reference!" assert]
-        ) case
-      ] if
-    ]
+    VarRef     ["."                     @result.cat]
     [
       refToVar isPlain [
         refToVar getPlainConstantIR @result.cat
@@ -1031,45 +1002,13 @@ makeTypeAliasId: [
 ];
 
 getFuncIrType: [
-  funcIndex:;
-  node: funcIndex processor.nodes.at.get;
+ Index:;
+  node:Index processor.nodes.at.get;
   resultId: node.signature toString makeStringId;
   resultId getNameById
 ];
 
 getFuncMplType: [
-  funcIndex:;
-  result: String;
-  node: funcIndex processor.nodes.at.get;
-
-  catData: [
-    args:;
-
-    "[" @result.cat
-    i: 0;
-    [
-      i args.getSize < [
-        current: i args.at;
-        current getMplType                                            @result.cat
-        i 1 + args.getSize < [
-          ","                                                         @result.cat
-        ] when
-        i 1 + @i set TRUE
-      ] &&
-    ] loop
-    "]" @result.cat
-  ];
-
-  "-"                @result.cat
-  node.mplConvention @result.cat
-  node.csignature.inputs catData
-  node.csignature.outputs catData
-
-  resultId: @result makeStringId;
-  resultId getNameById
-];
-
-getFuncDbgType: [
  Index:;
   result: String;
   node:Index processor.nodes.at.get;
@@ -1082,7 +1021,7 @@ getFuncDbgType: [
     [
       i args.getSize < [
         current: i args.at;
-        current getDbgType                                            @result.cat
+        current getMplType                                            @result.cat
         i 1 + args.getSize < [
           ","                                                         @result.cat
         ] when
@@ -1210,7 +1149,7 @@ getPlainConstantIR: [
   refToVar isNonrecursiveType [
     refToVar getNonrecursiveDataIRType  @resultIR set
     refToVar getNonrecursiveDataMPLType @resultMPL set
-    refToVar getNonrecursiveDataDBGType @resultDBG set
+    refToVar getNonrecursiveDataMPLType @resultDBG set
   ] [
     var.data.getTag VarRef = [
       branch: VarRef var.data.get;
@@ -1478,7 +1417,11 @@ generateVariableIRNameWith: [
   copy temporaryRegister:;
   copy hostId:;
   temporaryRegister not [currentNode.parent 0 =] && [
-    ("@global." processor.globalVarCount) assembleString makeStringId
+    processor.unitId 0 < not [
+      ("@\"global." processor.unitId processor.options.fileNames.at getStringImplementation "." processor.globalVarCount "\"") assembleString makeStringId
+    ] [
+      ("@global." processor.globalVarCount) assembleString makeStringId
+    ] if
     processor.globalVarCount 1 + @processor.@globalVarCount set
   ] [
     hostNode: hostId @processor.@nodes.at.get;

@@ -192,13 +192,13 @@ concatParserResults: [
   mresult:;
   results:;
   p: 0;
-  shift: 0;
+  offset: 0;
 
   adjustArray: [
     indexArray:;
     @indexArray [
       cur: .@value;
-      cur shift + @cur set
+      cur offset + @cur set
     ] each
   ];
 
@@ -225,8 +225,10 @@ concatParserResults: [
     ] each
 
     @current.@nodes move @mresult.@nodes.pushBack
+    current.shaHash @mresult.@shaHashes.pushBack
+    offset @mresult.@offsets.pushBack
 
-    shift current.memory.dataSize + @shift set
+    offset current.memory.dataSize + @offset set
   ] each
 
 ];

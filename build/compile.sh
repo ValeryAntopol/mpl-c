@@ -14,6 +14,7 @@ mplc -D COMPILER_SOURCE_VERSION=$SOURCE_VERSION -D DEBUG=TRUE -ndebug -o mplc.ll
  ../main.mpl\
  ../parser.mpl\
  ../pathUtils.mpl\
+ ../precompiledModule.mpl\
  ../printAST.mpl\
  ../processor.mpl\
  ../processorImpl.mpl\
@@ -26,7 +27,9 @@ mplc -D COMPILER_SOURCE_VERSION=$SOURCE_VERSION -D DEBUG=TRUE -ndebug -o mplc.ll
  ../sl/conventions.mpl\
  ../sl/file.mpl\
  ../sl/HashTable.mpl\
+ ../sl/Json.mpl\
  ../sl/memory.mpl\
  ../sl/Owner.mpl\
+ ../sl/sha1.mpl\
  ../sl/String.mpl\
  ../sl/Variant.mpl
