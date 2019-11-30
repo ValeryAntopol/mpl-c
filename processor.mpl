@@ -1,6 +1,7 @@
 "processor" module
 "control" includeModule
 "astNodeType" includeModule
+"Schemas" includeModule
 
 CompilerPositionInfo: [{
   column:     -1 dynamic;
@@ -298,6 +299,9 @@ Processor: [{
 
   stringNames: String RefToVar HashTable;        #for string constants
   typeNames:   String Int32 HashTable;           #mplType->irAliasId
+
+  schemaBuffer: VariableSchema Array;
+  schemaTable: VariableSchema Int32 HashTable; # bad: data is duplicated
 
   nameBuffer:  String Array;
   nameTable:   StringView Int32 HashTable;       #strings->nameTag; strings from nameBuffer

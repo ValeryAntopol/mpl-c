@@ -132,7 +132,7 @@ Variable: [{
 
   mplNameId:                         -1 dynamic;
   irNameId:                          -1 dynamic;
-  mplTypeId:                         -1 dynamic;
+  mplSchemaId:                         -1 dynamic;
   irTypeId:                          -1 dynamic;
   dbgTypeId:                         -1 dynamic;
   storageStaticness:                 Static;
@@ -192,6 +192,7 @@ processExportFunction: [multiParserResult @currentNode indexOfNode @processor @p
 processImportFunction: [multiParserResult @currentNode indexOfNode @processor @processorResult processImportFunctionImpl];
 compareEntriesRec:     [currentMatchingNodeIndex @nestedToCur @curToNested @comparingMessage multiParserResult @currentNode indexOfNode @processor @processorResult compareEntriesRecImpl];
 makeVariableType:      [multiParserResult @currentNode indexOfNode @processor @processorResult makeVariableTypeImpl];
+
 compilerError:         [makeStringView multiParserResult @currentNode indexOfNode @processor @processorResult compilerErrorImpl];
 
 {
@@ -345,6 +346,22 @@ compilerError:         [makeStringView multiParserResult @currentNode indexOfNod
   message: StringView Cref;
 } () {convention: cdecl;} "compilerErrorImpl" importFunction
 
+{
+  processorResult: ProcessorResult Ref;
+  processor: Processor Ref;
+  indexOfNode: Int32;
+  currentNode: CodeNode Ref;
+  multiParserResult: MultiParserResult Cref;
+  resultMPL: String Ref;
+  refToVar: RefToVar Cref;
+} () {}  "getMplTypeImpl" importFunction
+
+getMplType:            [
+  result: String;
+  @result multiParserResult @currentNode indexOfNode @processor @processorResult getMplTypeImpl
+  @result
+];
+
 # these functions require capture "processor"
 variableIsDeleted: [
   refToVar:;
@@ -380,8 +397,54 @@ getVar: [
 
 getNameById: [processor.nameBuffer.at makeStringView];
 getMplName:  [getVar.mplNameId processor.nameInfos.at.name makeStringView];
+#getMplType: [
+#  refToVar:;
+#  var: refToVar getVar;
+
+#  resultMPL: String;
+
+#  refToVar isNonrecursiveType [
+#    refToVar getNonrecursiveDataMPLType @resultMPL set
+#  ] [
+#    var.data.getTag VarRef = [
+#      branch: VarRef var.data.get;
+#      pointee: branch getVar;
+#      branch getMplType @resultMPL.cat
+#      branch.mutable [
+#        "R" @resultMPL.cat
+#      ] [
+#        "C" @resultMPL.cat
+#      ] if
+#    ] [
+#      var.data.getTag VarStruct = [
+#        branch: VarStruct @var.@data.get.get;
+#        "{" @resultMPL.cat
+#        i: 0 dynamic;
+#        [
+#          i branch.fields.dataSize < [
+#            curField: i branch.fields.at;
+#            (
+#              curField.nameInfo processor.nameInfos.at.name ":"
+#              curField.refToVar getMplType ";") @resultMPL.catMany
+#            i 1 + @i set TRUE
+#          ] &&
+#        ] loop
+#        "}" @resultMPL.cat
+#      ] [
+#        [FALSE] "Unknown variable for IR type" assert
+#      ] if
+#    ] if
+#  ] if
+
+#  refToVar isVirtual [
+#    ir: refToVar getVirtualValue;
+#    "'" @resultMPL.cat
+#    ir @resultMPL.cat
+#  ] when
+
+#  @resultMPL
+#];
 getIrName:   [getVar.irNameId getNameById];
-getMplType:  [getVar.mplTypeId getNameById];
 getIrType:   [getVar.irTypeId getNameById];
 getDbgType:  [getVar.dbgTypeId getNameById];
 
@@ -456,7 +519,7 @@ refsAreEqual: [
 variablesAreSame: [
   refToVar1:;
   refToVar2:;
-  refToVar1 getVar.mplTypeId refToVar2 getVar.mplTypeId = # id compare better than string compare!
+  refToVar1 getVar.mplSchemaId refToVar2 getVar.mplSchemaId = # id compare better than string compare!
 ];
 
 isInt: [
@@ -1050,9 +1113,9 @@ getFuncMplType: [
     [
       i args.getSize < [
         current: i args.at;
-        current getMplType                                            @result.cat
+        current getMplType @result.cat
         i 1 + args.getSize < [
-          ","                                                         @result.cat
+          "," @result.cat
         ] when
         i 1 + @i set TRUE
       ] &&
@@ -1060,13 +1123,12 @@ getFuncMplType: [
     "]" @result.cat
   ];
 
-  "-"                @result.cat
+  "-" @result.cat
   node.mplConvention @result.cat
   node.csignature.inputs catData
   node.csignature.outputs catData
 
-  resultId: @result makeStringId;
-  resultId getNameById
+  @result
 ];
 
 getFuncDbgType: [
@@ -1106,9 +1168,9 @@ makeDbgTypeId: [
   refToVar isVirtualType not [
     var: refToVar getVar;
 
-    fr: var.mplTypeId @processor.@debugInfo.@typeIdToDbgId.find;
+    fr: var.mplSchemaId @processor.@debugInfo.@typeIdToDbgId.find;
     fr.success not [
-      var.mplTypeId refToVar getTypeDebugDeclaration @processor.@debugInfo.@typeIdToDbgId.insert
+      var.mplSchemaId refToVar getTypeDebugDeclaration @processor.@debugInfo.@typeIdToDbgId.insert
     ] when
   ] when
 ];
@@ -1198,18 +1260,18 @@ getPlainConstantIR: [
   #struct.structAlignment
   #struct.structStorageSize
   #irTypeId
-  #mplTypeId
+  #mplSchemaId
   #dbgTypeId
 
   var: refToVar getVar;
 
+  var makeVariableSchema getVariableSchemaId @var.!mplSchemaId
+
   resultIR: String;
-  resultMPL: String;
   resultDBG: String;
 
   refToVar isNonrecursiveType [
     refToVar getNonrecursiveDataIRType  @resultIR set
-    refToVar getNonrecursiveDataMPLType @resultMPL set
     refToVar getNonrecursiveDataDBGType @resultDBG set
   ] [
     var.data.getTag VarRef = [
@@ -1218,13 +1280,6 @@ getPlainConstantIR: [
 
       branch getIrType @resultIR.cat
       "*"  @resultIR.cat
-
-      branch getMplType @resultMPL.cat
-      branch.mutable [
-        "R" @resultMPL.cat
-      ] [
-        "C" @resultMPL.cat
-      ] if
 
       branch getDbgType @resultDBG.cat
       "*"  @resultDBG.cat
@@ -1312,6 +1367,59 @@ getPlainConstantIR: [
           "}" @resultDBG.cat
         ] if
 
+        refToVar makeStructAlignment
+        refToVar makeStructStorageSize
+      ] [
+        [FALSE] "Unknown variable for IR type" assert
+      ] if
+    ] if
+  ] if
+
+  var.data.getTag VarStruct = [var.data.getTag VarImport =] || [
+    @resultIR makeTypeAliasId @var.@irTypeId set
+  ] [
+    @resultIR makeStringId @var.@irTypeId set
+  ] if
+
+  @resultDBG makeStringId @var.@dbgTypeId set
+  processor.options.debug [refToVar makeDbgTypeId] when
+] "makeVariableTypeImpl" exportFunction
+
+{
+  processorResult: ProcessorResult Ref;
+  processor: Processor Ref;
+  indexOfNode: Int32;
+  currentNode: CodeNode Ref;
+  multiParserResult: MultiParserResult Cref;
+  resultMPL: String Ref;
+  refToVar: RefToVar Cref;
+} () {} [
+  processorResult:;
+  processor:;
+  copy indexOfNode:;
+  currentNode:;
+  multiParserResult:;
+  failProc: @failProcForProcessor;
+  resultMPL:;
+
+  refToVar:;
+  var: refToVar getVar;
+
+  refToVar isNonrecursiveType [
+    refToVar getNonrecursiveDataMPLType @resultMPL set
+  ] [
+    var.data.getTag VarRef = [
+      branch: VarRef var.data.get;
+      pointee: branch getVar;
+      branch getMplType @resultMPL.cat
+      branch.mutable [
+        "R" @resultMPL.cat
+      ] [
+        "C" @resultMPL.cat
+      ] if
+    ] [
+      var.data.getTag VarStruct = [
+        branch: VarStruct @var.@data.get.get;
         "{" @resultMPL.cat
         i: 0 dynamic;
         [
@@ -1319,14 +1427,11 @@ getPlainConstantIR: [
             curField: i branch.fields.at;
             (
               curField.nameInfo processor.nameInfos.at.name ":"
-              curField.refToVar getMplType ";") assembleString @resultMPL.cat
+              curField.refToVar getMplType ";") @resultMPL.catMany
             i 1 + @i set TRUE
           ] &&
         ] loop
         "}" @resultMPL.cat
-
-        refToVar makeStructAlignment
-        refToVar makeStructStorageSize
       ] [
         [FALSE] "Unknown variable for IR type" assert
       ] if
@@ -1338,17 +1443,7 @@ getPlainConstantIR: [
     "'" @resultMPL.cat
     ir @resultMPL.cat
   ] when
-
-  var.data.getTag VarStruct = [var.data.getTag VarImport =] || [
-    @resultIR makeTypeAliasId @var.@irTypeId set
-  ] [
-    @resultIR makeStringId @var.@irTypeId set
-  ] if
-
-  @resultDBG makeStringId @var.@dbgTypeId set
-  @resultMPL makeStringId @var.@mplTypeId set
-  processor.options.debug [refToVar makeDbgTypeId] when
-] "makeVariableTypeImpl" exportFunction
+] "getMplTypeImpl" exportFunction
 
 cutValue: [
   copy tag:;

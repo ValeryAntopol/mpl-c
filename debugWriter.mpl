@@ -110,7 +110,7 @@ getPointerTypeDebugDeclaration: [
   refToVar:;
   compileOnce
   var: refToVar getVar;
-  fr: var.mplTypeId @processor.@debugInfo.@typeIdToDbgId.find;
+  fr: var.mplSchemaId @processor.@debugInfo.@typeIdToDbgId.find;
   [fr.success copy] "Pointee has no type debug info!" assert
   "DW_TAG_pointer_type" makeStringView fr.value processor.options.pointerSize 0ix cast 0 cast addDerivedTypeInfo
 ];
@@ -128,7 +128,7 @@ addMemberInfo: [
   field:;
   offset:;
 
-  fr: field.refToVar getVar.mplTypeId @processor.@debugInfo.@typeIdToDbgId.find;
+  fr: field.refToVar getVar.mplSchemaId @processor.@debugInfo.@typeIdToDbgId.find;
   [fr.success copy] "Field has not debug info about type!" assert
 
   fsize: field.refToVar getStorageSize 0ix cast 0 cast;
@@ -231,7 +231,7 @@ addVariableDebugInfo: [
   copy nameInfo:;
 
   refToVar isVirtualType not [
-    fr: refToVar getVar.mplTypeId @processor.@debugInfo.@typeIdToDbgId.find;
+    fr: refToVar getVar.mplSchemaId @processor.@debugInfo.@typeIdToDbgId.find;
     [fr.success copy] "There is no debug declaration for this type!" assert
     debugDeclarationIndex: fr.value copy;
     index: processor.debugInfo.lastId copy;
@@ -252,7 +252,7 @@ addGlobalVariableDebugInfo: [
   copy nameInfo:;
 
   refToVar isVirtualType not [
-    fr: refToVar getVar.mplTypeId @processor.@debugInfo.@typeIdToDbgId.find;
+    fr: refToVar getVar.mplSchemaId @processor.@debugInfo.@typeIdToDbgId.find;
     [fr.success copy] "There is no debug declaration for this type!" assert
     debugDeclarationIndex: fr.value copy;
 

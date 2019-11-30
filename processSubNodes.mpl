@@ -487,7 +487,7 @@ tryMatchNode: [
     result: -1 dynamic;
 
     getStackDepth 0 > [
-      byType: 0 dynamic getStackEntry getVar.mplTypeId fr.value.byMplType.find;
+      byType: 0 dynamic getStackEntry getVar.mplSchemaId fr.value.byMplType.find;
 
       byType.success [
         byType.value findInIndexArray @result set
