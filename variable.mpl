@@ -397,53 +397,7 @@ getVar: [
 
 getNameById: [processor.nameBuffer.at makeStringView];
 getMplName:  [getVar.mplNameId processor.nameInfos.at.name makeStringView];
-#getMplType: [
-#  refToVar:;
-#  var: refToVar getVar;
 
-#  resultMPL: String;
-
-#  refToVar isNonrecursiveType [
-#    refToVar getNonrecursiveDataMPLType @resultMPL set
-#  ] [
-#    var.data.getTag VarRef = [
-#      branch: VarRef var.data.get;
-#      pointee: branch getVar;
-#      branch getMplType @resultMPL.cat
-#      branch.mutable [
-#        "R" @resultMPL.cat
-#      ] [
-#        "C" @resultMPL.cat
-#      ] if
-#    ] [
-#      var.data.getTag VarStruct = [
-#        branch: VarStruct @var.@data.get.get;
-#        "{" @resultMPL.cat
-#        i: 0 dynamic;
-#        [
-#          i branch.fields.dataSize < [
-#            curField: i branch.fields.at;
-#            (
-#              curField.nameInfo processor.nameInfos.at.name ":"
-#              curField.refToVar getMplType ";") @resultMPL.catMany
-#            i 1 + @i set TRUE
-#          ] &&
-#        ] loop
-#        "}" @resultMPL.cat
-#      ] [
-#        [FALSE] "Unknown variable for IR type" assert
-#      ] if
-#    ] if
-#  ] if
-
-#  refToVar isVirtual [
-#    ir: refToVar getVirtualValue;
-#    "'" @resultMPL.cat
-#    ir @resultMPL.cat
-#  ] when
-
-#  @resultMPL
-#];
 getIrName:   [getVar.irNameId getNameById];
 getIrType:   [getVar.irTypeId getNameById];
 getDbgType:  [getVar.dbgTypeId getNameById];
@@ -1234,6 +1188,7 @@ getPlainConstantIR: [
   result
 ];
 
+
 {
   processorResult: ProcessorResult Ref;
   processor: Processor Ref;
@@ -1386,6 +1341,23 @@ getPlainConstantIR: [
 ] "makeVariableTypeImpl" exportFunction
 
 {
+  processor: Processor Cref;
+  schema1: VariableSchema Cref;
+  result: String Ref;
+} {} {} "schemaToStringImpl" importFunction
+{
+  processor: Processor Cref;
+  schema1: VariableSchema Cref;
+  result: String Ref;
+} {} {} [
+  processor:;
+  varSchema:;
+  result:;
+  varSchema schema->string @result set
+] "schemaToStringImpl" exportFunction
+
+
+{
   processorResult: ProcessorResult Ref;
   processor: Processor Ref;
   indexOfNode: Int32;
@@ -1404,6 +1376,8 @@ getPlainConstantIR: [
 
   refToVar:;
   var: refToVar getVar;
+  "noinline" addFunctionAttributes
+  dontInternalize
 
   refToVar isNonrecursiveType [
     refToVar getNonrecursiveDataMPLType @resultMPL set
@@ -1443,6 +1417,7 @@ getPlainConstantIR: [
     "'" @resultMPL.cat
     ir @resultMPL.cat
   ] when
+  (", mplSchemaId= " var.mplSchemaId ", schema->string= " var.mplSchemaId schemaIdToString) @resultMPL.catMany
 ] "getMplTypeImpl" exportFunction
 
 cutValue: [
@@ -1634,3 +1609,5 @@ findFieldWithOverloadShift: [
 ];
 
 findField: [0 dynamic findFieldWithOverloadShift];
+
+
