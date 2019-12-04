@@ -89,6 +89,8 @@ getVariableSchemaId: [
 
 VariableSchema: [{
   VARIABLE_SCHEMA: ();
+  irTypeId: -1;
+  dbgTypeId: -1;
   data: (
     BuiltinTypeSchema
     FunctionSchema
@@ -335,76 +337,3 @@ hashValue: [Nat32 same] [Nat32 cast] pfunc;
 hashValue: [Nat64 same] [Nat32 cast] pfunc;
 hashValue: [NatX same] [Nat32 cast] pfunc;
 hashValue: [Cond same] [[1n32] [0n32] if] pfunc;
-
-
-schemaIdToString: [
-  id: copy;
-  result: String;
-  schemaId: Int32;
-  @result id processor.schemaBuffer @ processor schemaToStringImpl
-  @result
-];
-
-schema->string: ["VARIABLE_SCHEMA" has] [
-  variableSchema: .data;
-  result: String;
-  variableSchema [schema->string @result set] visit
-  result
-] pfunc;
-
-schema->string: ["FIELD_SCHEMA" has] [
-  fieldSchema:;
-  (fieldSchema.nameInfo processor.nameInfos.at.name ":" fieldSchema.valueSchemaId schemaIdToString ";") assembleString
-] pfunc;
-
-schema->string: ["REF_SCHEMA" has] [
-  refSchema:;
-  (refSchema.pointeeSchemaId schemaIdToString refSchema.mutable ["R"] ["C"] if) assembleString
-] pfunc;
-
-schema->string: ["FUNCTION_SCHEMA" has] [
-  functionSchema:;
-  "!Function Schema!" toString
-] pfunc;
-
-schema->string: ["VIRTUAL_VALUE_SCHEMA" has] [
-  virtualValueSchema:;
-  virtualValueSchema.vitrualValue
-] pfunc;
-
-schema->string: ["STRUCT_SCHEMA" has] [
-  structSchema: .data;
-  result: String;
-  "{" @result.cat
-  structSchema [.value schema->string @result.cat] each
-  "}" @result.cat
-  @result
-] pfunc;
-
-schema->string: ["BUILTIN_TYPE_SCHEMA" has] [
-  .tag (
-    VarInvalid ["VarInvalid"]
-    VarCond ["VarCond"]
-    VarNat8 ["VarNat8"]
-    VarNat16 ["VarNat16"]
-    VarNat32 ["VarNat32"]
-    VarNat64 ["VarNat64"]
-    VarNatX ["VarNatX"]
-    VarInt8 ["VarInt8"]
-    VarInt16 ["VarInt16"]
-    VarInt32 ["VarInt32"]
-    VarInt64 ["VarInt64"]
-    VarIntX ["VarIntX"]
-    VarReal32 ["VarReal32"]
-    VarReal64 ["VarReal64"]
-    VarCode ["VarCode"]
-    VarBuiltin ["VarBuiltin"]
-    VarImport ["VarImport"]
-    VarString ["VarString"]
-    VarRef ["VarRef"]
-    VarStruct ["VarStruct"]
-    VarEnd ["VarEnd"]
-    ["!I DO NOT KNOW!"]
-  ) case toString
-] pfunc;
-

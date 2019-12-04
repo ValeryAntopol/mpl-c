@@ -1811,10 +1811,7 @@ copyOneVarWith: [
 
   src.mutable @dst.@mutable set
   dstVar: dst getVar;
-  srcVar.irTypeId  @dstVar.@irTypeId set
   srcVar.mplSchemaId @dstVar.@mplSchemaId set
-  srcVar.mplSchemaIdOld @dstVar.@mplSchemaIdOld set
-  srcVar.dbgTypeId @dstVar.@dbgTypeId set
 
   dst
 ];
