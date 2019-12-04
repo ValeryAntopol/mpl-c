@@ -369,7 +369,7 @@ schema->string: ["FUNCTION_SCHEMA" has] [
 
 schema->string: ["VIRTUAL_VALUE_SCHEMA" has] [
   virtualValueSchema:;
-  "!VIRTUAL_VALUE!" toString
+  virtualValueSchema.vitrualValue
 ] pfunc;
 
 schema->string: ["STRUCT_SCHEMA" has] [

@@ -133,6 +133,7 @@ Variable: [{
   mplNameId:                         -1 dynamic;
   irNameId:                          -1 dynamic;
   mplSchemaId:                         -1 dynamic;
+  mplSchemaIdOld:                         -1 dynamic;
   irTypeId:                          -1 dynamic;
   dbgTypeId:                         -1 dynamic;
   storageStaticness:                 Static;
@@ -356,6 +357,12 @@ compilerError:         [makeStringView multiParserResult @currentNode indexOfNod
   refToVar: RefToVar Cref;
 } () {}  "getMplTypeImpl" importFunction
 
+{
+  processor: Processor Cref;
+  schema1: VariableSchema Cref;
+  result: String Ref;
+} {} {} "schemaToStringImpl" importFunction
+
 getMplType:            [
   result: String;
   @result multiParserResult @currentNode indexOfNode @processor @processorResult getMplTypeImpl
@@ -401,6 +408,7 @@ getMplName:  [getVar.mplNameId processor.nameInfos.at.name makeStringView];
 getIrName:   [getVar.irNameId getNameById];
 getIrType:   [getVar.irTypeId getNameById];
 getDbgType:  [getVar.dbgTypeId getNameById];
+getMplTypeId: [getMplType makeStringId];
 
 getDebugType: [
   dbgType: getDbgType;
@@ -473,7 +481,21 @@ refsAreEqual: [
 variablesAreSame: [
   refToVar1:;
   refToVar2:;
-  refToVar1 getVar.mplSchemaId refToVar2 getVar.mplSchemaId = # id compare better than string compare!
+  result: refToVar1 getVar.mplSchemaId refToVar2 getVar.mplSchemaId =; # id compare better than string compare!
+  resultOld:refToVar1 getVar.mplSchemaIdOld refToVar2 getVar.mplSchemaIdOld =;
+  result resultOld = ~ [
+    var1: refToVar1 getVar;
+    var2: refToVar2 getVar;
+    (
+      "var1 schemaString = " var1.mplSchemaId schemaIdToString LF
+      "var2 schemaString = " var2.mplSchemaId schemaIdToString LF
+      "var1 mplType =" refToVar1 getMplType LF
+      "var2 mplType =" refToVar2 getMplType LF
+    ) printList
+    [FALSE] "Type comparision failure" assert
+  ] when
+
+  @result
 ];
 
 isInt: [
@@ -1086,7 +1108,7 @@ getFuncMplType: [
 ];
 
 getFuncDbgType: [
- Index:;
+  Index:;
   result: String;
   node:Index processor.nodes.at.get;
 
@@ -1220,8 +1242,6 @@ getPlainConstantIR: [
 
   var: refToVar getVar;
 
-  var makeVariableSchema getVariableSchemaId @var.!mplSchemaId
-
   resultIR: String;
   resultDBG: String;
 
@@ -1336,15 +1356,14 @@ getPlainConstantIR: [
     @resultIR makeStringId @var.@irTypeId set
   ] if
 
+  var makeVariableSchema getVariableSchemaId @var.!mplSchemaId
+  refToVar getMplTypeId @var.@mplSchemaIdOld set
+
   @resultDBG makeStringId @var.@dbgTypeId set
   processor.options.debug [refToVar makeDbgTypeId] when
 ] "makeVariableTypeImpl" exportFunction
 
-{
-  processor: Processor Cref;
-  schema1: VariableSchema Cref;
-  result: String Ref;
-} {} {} "schemaToStringImpl" importFunction
+
 {
   processor: Processor Cref;
   schema1: VariableSchema Cref;
@@ -1378,7 +1397,6 @@ getPlainConstantIR: [
   var: refToVar getVar;
   "noinline" addFunctionAttributes
   dontInternalize
-
   refToVar isNonrecursiveType [
     refToVar getNonrecursiveDataMPLType @resultMPL set
   ] [
@@ -1417,8 +1435,10 @@ getPlainConstantIR: [
     "'" @resultMPL.cat
     ir @resultMPL.cat
   ] when
-  (", mplSchemaId= " var.mplSchemaId ", schema->string= " var.mplSchemaId schemaIdToString) @resultMPL.catMany
+
+  resultMPL copy makeStringId @var.@mplSchemaIdOld set
 ] "getMplTypeImpl" exportFunction
+
 
 cutValue: [
   copy tag:;
@@ -1609,5 +1629,3 @@ findFieldWithOverloadShift: [
 ];
 
 findField: [0 dynamic findFieldWithOverloadShift];
-
-
