@@ -320,7 +320,6 @@ Processor: [{
     unitStringNumber: -1 dynamic;
     cuStringNumber:   -1 dynamic;
     fileNameIds:      Int32 Array;
-    typeIdToDbgId:    IntTable;
     globals:          Int32 Array;
   };
 

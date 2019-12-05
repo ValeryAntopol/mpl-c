@@ -1158,11 +1158,9 @@ makeDbgTypeId: [
   dontInternalize
   refToVar:;
   refToVar isVirtualType not [
-    var: refToVar getVar;
-
-    fr: var.mplSchemaId @processor.@debugInfo.@typeIdToDbgId.find;
-    fr.success not [
-      var.mplSchemaId refToVar getTypeDebugDeclaration @processor.@debugInfo.@typeIdToDbgId.insert
+    varSchema: refToVar getMplSchema;
+    varSchema.dbgTypeDeclarationId -1 = [
+      refToVar getTypeDebugDeclaration @varSchema.@dbgTypeDeclarationId set
     ] when
   ] when
 ];

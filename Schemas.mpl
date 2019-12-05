@@ -91,6 +91,7 @@ VariableSchema: [{
   VARIABLE_SCHEMA: ();
   irTypeId: -1;
   dbgTypeId: -1;
+  dbgTypeDeclarationId: -1;
   data: (
     BuiltinTypeSchema
     FunctionSchema
