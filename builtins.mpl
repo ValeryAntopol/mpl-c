@@ -117,7 +117,7 @@ addBuiltin: [
 initBuiltins: [
   processor:;
   processorResult:;
-  indexOfNode: 0 dynamic;
+  indexOfNode: 0;
   codeNode: indexOfNode @processor.@nodes.at.get;
   currentNode: @codeNode;
   failProc: @failProcForProcessor;

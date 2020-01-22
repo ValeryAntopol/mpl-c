@@ -5,7 +5,7 @@ staticCall: [
   staticCallBody:;
   copy staticCallLast:;   # required to be static
   copy staticCallFirst:;  # required to be static
-  copy staticCallIndex:;  # can be dynamic
+  copy staticCallIndex:;  # can be
 
 
   [
@@ -25,7 +25,7 @@ staticCall: [
     staticCallFirst 17 staticCallFirst cast + staticCallLast > [ # static condition or die
       [
         staticCallFirst staticCallLast < [
-          staticCallIndex staticCallFirst = [ # dynamic condition in loop
+          staticCallIndex staticCallFirst = [ # condition in loop
             staticCallFirst @staticCallBody call # dont break, loop must be static
           ] when
 

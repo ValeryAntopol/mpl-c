@@ -108,7 +108,7 @@ getStringImplementation: [
   stringView: makeStringView;
   [
     result: String;
-    i: 0 dynamic;
+    i: 0;
     [
       i stringView.dataSize < [
         codeRef: stringView.dataBegin storageAddress i Natx cast + Nat8 addressToReference;
@@ -378,8 +378,8 @@ createCheckedCopyToNewWith: [
   ] if
 ];
 
-createCheckedCopyToNew: [TRUE dynamic createCheckedCopyToNewWith];
-createCheckedCopyToNewNoDie: [FALSE dynamic createCheckedCopyToNewWith];
+createCheckedCopyToNew: [TRUE createCheckedCopyToNewWith];
+createCheckedCopyToNewNoDie: [FALSE createCheckedCopyToNewWith];
 
 createCopyToNew: [
   newRefToVar:;
@@ -481,7 +481,7 @@ createCallIR: [
   @funcName @operation.cat
   "(" @operation.cat
 
-  i: 0 dynamic;
+  i: 0;
   [
     i argList.dataSize < [
       currentArg: i argList.at;
@@ -539,7 +539,7 @@ createPhiNode: [
 createComent: [
   coment: makeStringView;
   [
-    compileOnce
+   
     (" ;" coment) assembleString makeInstruction @currentNode.@program.pushBack
   ] call
 ];

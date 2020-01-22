@@ -339,49 +339,49 @@ mplNumberBuiltinOp: [
 ];
 
 [
-  TRUE dynamic @processor.@usedFloatBuiltins set
+  TRUE @processor.@usedFloatBuiltins set
   [a:; a getVar.data.getTag VarReal32 = ["@llvm.sin.f32" makeStringView]["@llvm.sin.f64" makeStringView] if
   ] [sin] [x:;] mplNumberBuiltinOp
 ] "mplBuiltinSin" @declareBuiltin ucall
 
 [
-  TRUE dynamic @processor.@usedFloatBuiltins set
+  TRUE @processor.@usedFloatBuiltins set
   [a:; a getVar.data.getTag VarReal32 = ["@llvm.cos.f32" makeStringView]["@llvm.cos.f64" makeStringView] if
   ] [cos] [x:;] mplNumberBuiltinOp
 ] "mplBuiltinCos" @declareBuiltin ucall
 
 [
-  TRUE dynamic @processor.@usedFloatBuiltins set
+  TRUE @processor.@usedFloatBuiltins set
   [a:; a getVar.data.getTag VarReal32 = ["@llvm.sqrt.f32" makeStringView]["@llvm.sqrt.f64" makeStringView] if
   ] [sqrt] [x:;] mplNumberBuiltinOp
 ] "mplBuiltinSqrt" @declareBuiltin ucall
 
 [
-  TRUE dynamic @processor.@usedFloatBuiltins set
+  TRUE @processor.@usedFloatBuiltins set
   [a:; a getVar.data.getTag VarReal32 = ["@llvm.ceil.f32" makeStringView]["@llvm.ceil.f64" makeStringView] if
   ] [ceil] [x:;] mplNumberBuiltinOp
 ] "mplBuiltinCeil" @declareBuiltin ucall
 
 [
-  TRUE dynamic @processor.@usedFloatBuiltins set
+  TRUE @processor.@usedFloatBuiltins set
   [a:; a getVar.data.getTag VarReal32 = ["@llvm.floor.f32" makeStringView]["@llvm.floor.f64" makeStringView] if
   ] [floor] [x:;] mplNumberBuiltinOp
 ] "mplBuiltinFloor" @declareBuiltin ucall
 
 [
-  TRUE dynamic @processor.@usedFloatBuiltins set
+  TRUE @processor.@usedFloatBuiltins set
   [a:; a getVar.data.getTag VarReal32 = ["@llvm.log.f32" makeStringView]["@llvm.log.f64" makeStringView] if
   ] [log] [x:;] mplNumberBuiltinOp
 ] "mplBuiltinLog" @declareBuiltin ucall
 
 [
-  TRUE dynamic @processor.@usedFloatBuiltins set
+  TRUE @processor.@usedFloatBuiltins set
   [a:; a getVar.data.getTag VarReal32 = ["@llvm.log10.f32" makeStringView]["@llvm.log10.f64" makeStringView] if
   ] [log10] [x:;] mplNumberBuiltinOp
 ] "mplBuiltinLog10" @declareBuiltin ucall
 
 [
-  TRUE dynamic @processor.@usedFloatBuiltins set
+  TRUE @processor.@usedFloatBuiltins set
   arg2: pop;
   arg1: pop;
 
@@ -585,7 +585,7 @@ mplShiftBinaryOp: [
 mplBuiltinProcessAtList: [
   refToStruct: pop;
   refToIndex: pop;
-  compileOnce
+ 
 
   result: RefToVar;
 
@@ -610,7 +610,7 @@ mplBuiltinProcessAtList: [
           index 0 < [index struct.fields.getSize < not] || ["index is out of bounds" compilerError] when
         ] [
           field: index struct.fields.at.refToVar;
-          field VarRef TRUE dynamic TRUE dynamic TRUE dynamic createVariableWithVirtual @result set
+          field VarRef TRUE TRUE TRUE createVariableWithVirtual @result set
           refToStruct.mutable @result.@mutable set
           result fullUntemporize
         ]
@@ -625,12 +625,12 @@ mplBuiltinProcessAtList: [
           refToIndex staticnessOfVar Weak < [
             struct.homogeneous [
               struct.fields.dataSize 0 > [
-                # create dynamic getIndex
+                # create getIndex
                 realRefToStruct: refToStruct;
                 realStructVar: structVar;
                 realStruct: struct;
                 refToStruct staticnessOfVar Virtual < not [
-                  "can't get dynamic index in virtual struct" compilerError
+                  "can't get index in virtual struct" compilerError
                 ] when
 
                 refToIndex makeVarRealCaptured
@@ -796,7 +796,7 @@ parseSignature: [
       optionsVar.data.getTag VarStruct = not ["options must be a struct" compilerError] when
     ] [
       optionsStruct: VarStruct optionsVar.data.get.get;
-      hasConvention: FALSE dynamic;
+      hasConvention: FALSE;
       optionsStruct.fields [
         f: .value;
         f.nameInfo (
@@ -851,7 +851,7 @@ parseSignature: [
           returnVar.temporary [
             return @result.@outputs.pushBack
           ] [
-            return TRUE dynamic createRef @result.@outputs.pushBack
+            return TRUE createRef @result.@outputs.pushBack
           ] if
         ] if
       ] when
@@ -882,7 +882,7 @@ parseSignature: [
     [signature: parseSignature;]
     [
       astNode: VarCode varBody.data.get.index @multiParserResult.@memory.at;
-      index: signature astNode VarString varName.data.get makeStringView FALSE dynamic processExportFunction;
+      index: signature astNode VarString varName.data.get makeStringView FALSE processExportFunction;
     ]
   ) sequence
 ] "mplBuiltinExportFunction" @declareBuiltin ucall
@@ -901,7 +901,7 @@ parseSignature: [
       refToVar isVirtual ["cannot export virtual var" compilerError] when
     ] [
       refToVar getVar.temporary not [
-        refToVar TRUE dynamic createRef @refToVar set
+        refToVar TRUE createRef @refToVar set
       ] when
       var: refToVar getVar;
       FALSE @var.@temporary set
@@ -942,7 +942,7 @@ parseSignature: [
       varName.data.getTag VarString = not ["function name must be static string" compilerError] when
     ]
     [signature: parseSignature;]
-    [index: signature VarString varName.data.get makeStringView FALSE dynamic processImportFunction;]
+    [index: signature VarString varName.data.get makeStringView FALSE processImportFunction;]
   ) sequence
 ] "mplBuiltinImportFunction" @declareBuiltin ucall
 
@@ -952,7 +952,7 @@ parseSignature: [
     [signature: parseSignature;]
     [
       name: ("null." processor.nodes.getSize) assembleString;
-      index: signature name makeStringView TRUE dynamic processImportFunction;
+      index: signature name makeStringView TRUE processImportFunction;
     ]
     [
       nullNode: index processor.nodes.at.get;
@@ -981,7 +981,7 @@ parseSignature: [
             "variable cant be virtual" compilerError
           ] [
             varType.temporary not [
-              refToType TRUE dynamic createRef @refToType set
+              refToType TRUE createRef @refToType set
             ] when
 
             name: VarString varName.data.get;
@@ -1252,8 +1252,8 @@ parseSignature: [
   ] if
 ] "mplBuiltinModule" @declareBuiltin ucall
 
-[TRUE dynamic defaultUseOrIncludeModule] "mplBuiltinUseModule" @declareBuiltin ucall
-[FALSE dynamic defaultUseOrIncludeModule] "mplBuiltinIncludeModule" @declareBuiltin ucall
+[TRUE defaultUseOrIncludeModule] "mplBuiltinUseModule" @declareBuiltin ucall
+[FALSE defaultUseOrIncludeModule] "mplBuiltinIncludeModule" @declareBuiltin ucall
 
 [
   refToName: pop;
@@ -1311,7 +1311,7 @@ parseSignature: [
               element: pair.value toString makeVarString;
               field: Field;
               processor.emptyNameInfo @field.@nameInfo set
-              element TRUE dynamic createRef @field.@refToVar set
+              element TRUE createRef @field.@refToVar set
               field @struct.@fields.pushBack
             ] each
 
@@ -1319,7 +1319,7 @@ parseSignature: [
             result isVirtual not [result createAllocIR @result set] when
             resultStruct: VarStruct result getVar.data.get.get;
 
-            i: 0 dynamic;
+            i: 0;
             [
               i resultStruct.fields.dataSize < [
                 field: i resultStruct.fields.at;
@@ -1503,7 +1503,7 @@ parseSignature: [
   refToVar2: pop;
   compilable [
     refToVar1 refToVar2 variablesAreSame [
-      cmpResult: 0 dynamic; # -1 false, 1 true, 0 need to check
+      cmpResult: 0; # -1 false, 1 true, 0 need to check
       refToVar1 refToVar2 refsAreEqual [
         1 @cmpResult set
       ] [
@@ -1627,7 +1627,7 @@ parseSignature: [
           staticness: refToElement staticnessOfVar;
           staticness Weak = [Dynamic @staticness set] when
 
-          i: 0 dynamic;
+          i: 0;
           [
             i count < [
               element: refToElement copyVar staticness makeStaticness;
@@ -1644,7 +1644,7 @@ parseSignature: [
           resultStruct: VarStruct result getVar.data.get.get;
 
 
-          i: 0 dynamic;
+          i: 0;
           [
             i resultStruct.fields.dataSize < [
               field: i resultStruct.fields.at;
@@ -1673,7 +1673,7 @@ parseSignature: [
 [
   varPrev:   0n64 VarNatX createVariable;
   varNext:   0n64 VarNatX createVariable;
-  varName:   String makeVarString TRUE dynamic createRefNoOp;
+  varName:   String makeVarString TRUE createRefNoOp;
   varLine:   0i64 VarInt32 createVariable;
   varColumn: 0i64 VarInt32 createVariable;
 
@@ -1704,8 +1704,8 @@ parseSignature: [
   first: @struct move owner VarStruct createVariable;
   last: first copyVar;
 
-  firstRef: first FALSE dynamic createRefNoOp;
-  lastRef:  last  FALSE dynamic createRefNoOp;
+  firstRef: first FALSE createRefNoOp;
+  lastRef:  last  FALSE createRefNoOp;
 
   firstRef makeVarDirty
   lastRef  makeVarDirty
@@ -1799,11 +1799,11 @@ parseSignature: [
 ] "mplBuiltinManuallyDestroyVariable" @declareBuiltin ucall
 
 [
-  TRUE dynamic @currentNode.@nodeCompileOnce set
+  TRUE @currentNode.@nodeCompileOnce set
 ] "mplBuiltinCompileOnce" @declareBuiltin ucall
 
 [
-  TRUE dynamic @currentNode.@nodeIsRecursive set
+  TRUE @currentNode.@nodeIsRecursive set
 ] "mplBuiltinRecursive" @declareBuiltin ucall
 
 [

@@ -108,7 +108,7 @@ getPlainTypeDebugDeclaration: [
 
 getPointerTypeDebugDeclaration: [
   refToVar:;
-  compileOnce
+ 
   var: refToVar getVar;
   debugDeclarationIndex: refToVar getMplSchema.dbgTypeDeclarationId copy;
   [debugDeclarationIndex -1 = ~] "Pointee has no type debug info!" assert
@@ -177,8 +177,8 @@ getTypeDebugDeclaration: [
           var.data.getTag VarStruct = [
             struct: VarStruct var.data.get.get;
             members: Int32 Array;
-            f: 0 dynamic;
-            offset: 0 dynamic;
+            f: 0;
+            offset: 0;
             [
               f struct.fields.dataSize < [
                 field: f struct.fields.at;
@@ -194,7 +194,7 @@ getTypeDebugDeclaration: [
             processor.debugInfo.lastId 1 + @processor.@debugInfo.@lastId set
             newDebugInfo: String;
             ("!" index " = !{")   @newDebugInfo.catMany
-            f: 0 dynamic;
+            f: 0;
             [
               f members.dataSize < [
                 f 0 > [", "     @newDebugInfo.cat] when
@@ -314,7 +314,7 @@ addDerivedTypeInfo: [
 ];
 
 addFileDebugInfo: [
-  compileOnce
+ 
   fileName:;
   index: processor.debugInfo.lastId copy;
   processor.debugInfo.lastId 1 + @processor.@debugInfo.@lastId set
@@ -326,7 +326,7 @@ addFileDebugInfo: [
 ];
 
 addFuncSubroutineInfo: [
-  compileOnce
+ 
   index: processor.debugInfo.lastId copy;
   processor.debugInfo.lastId 1 + @processor.@debugInfo.@lastId set
   ("!" index " = !{null}") assembleString @processor.@debugInfo.@strings.pushBack
@@ -341,7 +341,7 @@ addFuncSubroutineInfo: [
 ];
 
 addFuncDebugInfo: [
-  compileOnce
+ 
   copy funcDebugIndex:;
   funcIRName:;
   funcName:;
@@ -358,7 +358,7 @@ addFuncDebugInfo: [
 ];
 
 addDebugLocation: [
-  compileOnce
+ 
   copy funcDbgIndex:;
   position:;
 

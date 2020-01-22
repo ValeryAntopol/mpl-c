@@ -16,7 +16,7 @@ printInfo: [
   "  -array_checks 0|1   Turn off/on array index checks, by default it is on in debug mode and off in release mode" print LF print
   "  -auto_recursion     Make all code block recursive-by-default" print LF print
   "  -call_trace         Generate information about call trace" print LF print
-  "  -dynalit            Number literals are dynamic constants, which are not used in analysis; default mode is static literals" print LF print
+  "  -dynalit            Number literals are constants, which are not used in analysis; default mode is static literals" print LF print
   "  -linker_option      Add linker option for LLVM" print LF print
   "  -logs               Value of \"HAS_LOGS\" constant in code turn to TRUE" print LF print
   "  -ndebug             Disable debug info; value of \"DEBUG\" constant in code turn to FALSE" print LF print
@@ -79,25 +79,25 @@ createDefinition: [
     argc:;
     argv:;
 
-    success: TRUE dynamic;
+    success: TRUE;
 
-    OPT_ANY:                [0 dynamic];
-    OPT_OUTPUT_FILE_NAME:   [1 dynamic];
-    OPT_LINKER_OPTION:      [3 dynamic];
-    OPT_DEFINITION:         [4 dynamic];
-    OPT_ARRAY_CHECK:        [5 dynamic];
-    OPT_CALL_TRACE:         [6 dynamic];
+    OPT_ANY:                [0];
+    OPT_OUTPUT_FILE_NAME:   [1];
+    OPT_LINKER_OPTION:      [3];
+    OPT_DEFINITION:         [4];
+    OPT_ARRAY_CHECK:        [5];
+    OPT_CALL_TRACE:         [6];
     nextOption: OPT_ANY;
 
     options: ProcessorOptions;
-    hasVersion: FALSE dynamic;
+    hasVersion: FALSE;
     parserResults: ParserResults;
     definitions: String;
-    hasVersion: FALSE dynamic;
+    hasVersion: FALSE;
     outputFileName: "mpl.ll" toString;
 
-    forceArrayChecks: -1 dynamic;
-    forceCallTrace: -1 dynamic;
+    forceArrayChecks: -1;
+    forceCallTrace: -1;
 
     "*definitions" toString @options.@fileNames.pushBack
 

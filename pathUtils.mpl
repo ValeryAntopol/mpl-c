@@ -31,7 +31,7 @@ simplifyPath: [
       resultFileName: String;
 
       splittedPath.chars.dataSize 0 > [
-        position: 0 dynamic;
+        position: 0;
         fragments: String Array;
         String @fragments.pushBack
 

@@ -121,7 +121,7 @@ defaultUseOrIncludeModule: [
           fr.value asUse processUseModule
         ] if
       ] [
-        TRUE dynamic @processorResult.@findModuleFail set
+        TRUE @processorResult.@findModuleFail set
         string @processorResult.@errorInfo.@missedModule set
         ("module not found: " string) assembleString compilerError
       ] if
@@ -156,12 +156,12 @@ getStackEntryWith: [
   @result
 ];
 
-getStackEntry:          [compileOnce TRUE  static getStackEntryWith];
+getStackEntry:          [ TRUE  static getStackEntryWith];
 getStackEntryUnchecked: [            FALSE static getStackEntryWith];
 
 getStackDepth: [
-  depth: 0 dynamic;
-  inputsCount: 0 dynamic;
+  depth: 0;
+  inputsCount: 0;
   index: indexOfNode copy;
   [
     node: index processor.nodes.at.get;
@@ -181,7 +181,7 @@ getStackDepth: [
 defaultPrintStack: [
   ("stack:" LF "depth=" getStackDepth LF) printList
 
-  i: 0 dynamic;
+  i: 0;
   [
     i getStackDepth < [
       entry: i getStackEntryUnchecked;

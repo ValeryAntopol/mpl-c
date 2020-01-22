@@ -8,40 +8,40 @@
 "debugWriter" includeModule
 "processor"   includeModule
 
-Dirty:           [0n8 dynamic];
-Dynamic:         [1n8 dynamic];
-Weak:            [2n8 dynamic];
-Static:          [3n8 dynamic];
-Virtual:         [4n8 dynamic];
-Schema:          [5n8 dynamic];
+Dirty:           [0n8];
+Dynamic:         [1n8];
+Weak:            [2n8];
+Static:          [3n8];
+Virtual:         [4n8];
+Schema:          [5n8];
 
-NameCaseInvalid:               [ 0n8 dynamic];
-NameCaseBuiltin:               [ 1n8 dynamic];
-NameCaseLocal:                 [ 2n8 dynamic];
-NameCaseFromModule:            [ 3n8 dynamic];
-NameCaseCapture:               [ 4n8 dynamic];
+NameCaseInvalid:               [ 0n8];
+NameCaseBuiltin:               [ 1n8];
+NameCaseLocal:                 [ 2n8];
+NameCaseFromModule:            [ 3n8];
+NameCaseCapture:               [ 4n8];
 
-NameCaseSelfMember:            [ 5n8 dynamic];
-NameCaseClosureMember:         [ 6n8 dynamic];
-NameCaseSelfObject:            [ 7n8 dynamic];
-NameCaseClosureObject:         [ 8n8 dynamic];
-NameCaseSelfObjectCapture:     [ 9n8 dynamic];
-NameCaseClosureObjectCapture:  [10n8 dynamic];
+NameCaseSelfMember:            [ 5n8];
+NameCaseClosureMember:         [ 6n8];
+NameCaseSelfObject:            [ 7n8];
+NameCaseClosureObject:         [ 8n8];
+NameCaseSelfObjectCapture:     [ 9n8];
+NameCaseClosureObjectCapture:  [10n8];
 
 MemberCaseToObjectCase:        [2n8 +];
 MemberCaseToObjectCaptureCase: [4n8 +];
 
-ShadowReasonNo:      [0n8 dynamic];
-ShadowReasonCapture: [1n8 dynamic];
-ShadowReasonInput:   [2n8 dynamic];
-ShadowReasonField:   [3n8 dynamic];
-ShadowReasonPointee: [4n8 dynamic];
+ShadowReasonNo:      [0n8];
+ShadowReasonCapture: [1n8];
+ShadowReasonInput:   [2n8];
+ShadowReasonField:   [3n8];
+ShadowReasonPointee: [4n8];
 
 RefToVar: [{
   virtual REF_TO_VAR: ();
-  varId: -1 dynamic;
-  hostId: -1 dynamic;
-  mutable: TRUE dynamic;
+  varId: -1;
+  hostId: -1;
+  mutable: TRUE;
 }];
 
 =: ["REF_TO_VAR" has] [
@@ -60,9 +60,9 @@ hash: ["REF_TO_VAR" has] [
 
 NameInfoEntry: [{
   refToVar: RefToVar;
-  startPoint: -1 dynamic; # id of node
+  startPoint: -1; # id of node
   nameCase: NameCaseInvalid;
-  index: -1 dynamic; # for NameCaseSelfMember
+  index: -1; # for NameCaseSelfMember
 }];
 
 Overload: [NameInfoEntry Array];
@@ -97,24 +97,24 @@ VarStruct:  [19 static];
 VarEnd:     [20 static];
 
 Field: [{
-  nameInfo: -1 dynamic; # NameInfo id
-  nameOverload: -1 dynamic;
+  nameInfo: -1; # NameInfo id
+  nameOverload: -1;
   refToVar: RefToVar;
 }];
 
 FieldArray: [Field Array];
 
 Struct: [{
-  fullVirtual:   FALSE dynamic;
-  homogeneous:   FALSE dynamic;
-  hasPreField:   FALSE dynamic;
-  unableToDie:   FALSE dynamic;
-  hasDestructor: FALSE dynamic;
-  forgotten:     TRUE  dynamic;
+  fullVirtual:   FALSE;
+  homogeneous:   FALSE;
+  hasPreField:   FALSE;
+  unableToDie:   FALSE;
+  hasDestructor: FALSE;
+  forgotten:     TRUE ;
   realFieldIndexes: Int32 Array;
   fields: FieldArray;
-  structStorageSize: 0nx dynamic;
-  structAlignment: 0nx dynamic;
+  structStorageSize: 0nx;
+  structAlignment: 0nx;
 }]; #IDs of pointee vars
 
 CodeNodeInfo: [{
@@ -130,28 +130,28 @@ CodeNodeInfo: [{
 Variable: [{
   VARIABLE: ();
 
-  mplNameId:                         -1 dynamic;
-  irNameId:                          -1 dynamic;
-  mplSchemaId:                       -1 dynamic;
+  mplNameId:                         -1;
+  irNameId:                          -1;
+  mplSchemaId:                       -1;
   storageStaticness:                 Static;
   staticness:                        Static;
-  global:                            FALSE dynamic;
-  temporary:                         TRUE dynamic;
-  usedInHeader:                      FALSE dynamic;
-  capturedAsMutable:                 FALSE dynamic;
-  capturedAsRealValue:               FALSE dynamic;
-  tref:                              TRUE dynamic;
+  global:                            FALSE;
+  temporary:                         TRUE;
+  usedInHeader:                      FALSE;
+  capturedAsMutable:                 FALSE;
+  capturedAsRealValue:               FALSE;
+  tref:                              TRUE;
   shadowReason:                      ShadowReasonNo;
-  globalId:                          -1 dynamic;
+  globalId:                          -1;
   shadowBegin:                       RefToVar;
   shadowEnd:                         RefToVar;
   capturedHead:                      RefToVar;
   capturedTail:                      RefToVar;
   capturedPrev:                      RefToVar;
   realValue:                         RefToVar;
-  globalDeclarationInstructionIndex: -1 dynamic;
-  allocationInstructionIndex:        -1 dynamic;
-  getInstructionIndex:               -1 dynamic;
+  globalDeclarationInstructionIndex: -1;
+  allocationInstructionIndex:        -1;
+  getInstructionIndex:               -1;
 
   data: (
     Nat8             #VarInvalid
@@ -456,7 +456,7 @@ deepPrintVar: [
         ] [
           curVar.data.getTag VarStruct = [
             struct: VarStruct curVar.data.get.get;
-            f: 0 dynamic;
+            f: 0;
             [
               f struct.fields.dataSize < [
                 (f struct.fields.at.refToVar curPad 1 +) @unprinted.pushBack
@@ -587,7 +587,7 @@ isStaticData: [
   refToVar isVirtual not [var.data.getTag VarStruct =] && [
     unfinished: RefToVar Array;
     refToVar @unfinished.pushBack
-    result: TRUE dynamic;
+    result: TRUE;
     [
       result [unfinished.getSize 0 >] && [
         current: unfinished.last copy;
@@ -596,7 +596,7 @@ isStaticData: [
         ] [
           current isPlain [
             current staticnessOfVar Weak < [
-              FALSE dynamic @result set
+              FALSE @result set
             ] when
           ] [
             curVar: current getVar;
@@ -604,7 +604,7 @@ isStaticData: [
               struct: VarStruct curVar.data.get.get;
               struct.fields [.value.refToVar @unfinished.pushBack] each
             ] [
-              FALSE dynamic @result set
+              FALSE @result set
             ] if
           ] if
         ] if
@@ -706,7 +706,7 @@ getPlainDataIRType: [
 ];
 
 getPlainDataMPLType: [
-  compileOnce
+ 
   var: getVar;
   result: String;
   var.data.getTag (
@@ -733,7 +733,7 @@ getPlainDataMPLType: [
 ];
 
 getNonrecursiveDataIRType: [
-  compileOnce
+ 
   refToVar:;
   refToVar isPlain [
     refToVar getPlainDataIRType
@@ -758,7 +758,7 @@ getNonrecursiveDataIRType: [
 ];
 
 getNonrecursiveDataMPLType: [
-  compileOnce
+ 
   refToVar:;
   refToVar isPlain [
     refToVar getPlainDataMPLType
@@ -787,7 +787,7 @@ getNonrecursiveDataMPLType: [
 ];
 
 getNonrecursiveDataDBGType: [
-  compileOnce
+ 
   refToVar:;
   refToVar isPlain [
     refToVar getPlainDataMPLType
@@ -910,7 +910,7 @@ unglobalize: [
   var: refToVar getVar;
   var.global [
     FALSE @var.@global set
-    -1 dynamic @var.@globalId set
+    -1 @var.@globalId set
     refToVar makeVariableIRName
   ] when
 ];
@@ -1155,7 +1155,7 @@ bitView: [
     "0" makeStringView "1" makeStringView "2" makeStringView "3" makeStringView "4" makeStringView
     "5" makeStringView "6" makeStringView "7" makeStringView "8" makeStringView "9" makeStringView
     "A" makeStringView "B" makeStringView "C" makeStringView "D" makeStringView "E" makeStringView "F" makeStringView);
-  i: 0 dynamic;
+  i: 0;
   [
     i 0ix cast 0nx cast f storageSize < [
       d: f storageSize 0ix cast 0 cast i - 1 - buffer @ 0n32 cast;
@@ -1243,7 +1243,7 @@ getPlainConstantIR: [
     FALSE @branch.@hasPreField set
     FALSE @branch.@hasDestructor set
 
-    i: 0 dynamic;
+    i: 0;
     branch.fields.dataSize [
       field0: 0 branch.fields.at;
       fieldi: i branch.fields.at;
@@ -1433,7 +1433,7 @@ getPlainConstantIR: [
       var.data.getTag VarStruct = [
         branch: VarStruct @var.@data.get.get;
         "{" @resultMPL.cat
-        i: 0 dynamic;
+        i: 0;
         [
           i branch.fields.dataSize < [
             curField: i branch.fields.at;
@@ -1552,7 +1552,7 @@ getStaticStructIR: [
             (current getIrType " ") @result.catMany
             struct: VarStruct curVar.data.get.get;
             struct.homogeneous ["[" makeStringView] ["{" makeStringView] if @result.cat
-            first: TRUE dynamic;
+            first: TRUE;
             struct.fields [
               index: .index copy;
               current: struct.fields.getSize 1 - index - struct.fields.at.refToVar;
@@ -1560,7 +1560,7 @@ getStaticStructIR: [
                 current @unfinishedVars.pushBack
                 first [
                   struct.homogeneous ["]" makeStringView] ["}" makeStringView] if @unfinishedTerminators.pushBack
-                  FALSE dynamic @first set
+                  FALSE @first set
                 ] [
                   ", " makeStringView @unfinishedTerminators.pushBack
                 ] if
@@ -1619,7 +1619,7 @@ findFieldWithOverloadShift: [
 
   var.data.getTag VarStruct = [
     struct: VarStruct var.data.get.get;
-    i: struct.fields.dataSize copy dynamic;
+    i: struct.fields.dataSize copy;
 
     [
       i 0 > [
@@ -1646,4 +1646,4 @@ findFieldWithOverloadShift: [
   result
 ];
 
-findField: [0 dynamic findFieldWithOverloadShift];
+findField: [0 findFieldWithOverloadShift];

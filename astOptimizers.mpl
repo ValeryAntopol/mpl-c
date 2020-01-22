@@ -41,7 +41,7 @@ optimizeLabels: [
   FALSE @needToSwap.pushBack
   IndexArray @processedNodes.pushBack
   @parserResult.@nodes AsRef @unfinishedNodes.pushBack
-  0 dynamic @unfinishedIndexes.pushBack
+  0 @unfinishedIndexes.pushBack
 
   [
     uSize: unfinishedIndexes.dataSize 1 -;
@@ -154,7 +154,7 @@ optimizeNames: [
   multiParserResult:;
   ids: @multiParserResult.@names;
 
-  i: 0 dynamic;
+  i: 0;
   [
     i multiParserResult.nodes.dataSize < [
       currentNodesArray: i @multiParserResult.@nodes.at;
@@ -162,7 +162,7 @@ optimizeNames: [
       unfinishedNodes: IndexArray AsRef Array;
       unfinishedIndexes: Int32 Array;
       @currentNodesArray AsRef @unfinishedNodes.pushBack
-      0 dynamic @unfinishedIndexes.pushBack
+      0 @unfinishedIndexes.pushBack
 
       [
         uSize: unfinishedIndexes.dataSize 1 -;

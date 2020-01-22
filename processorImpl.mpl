@@ -52,7 +52,7 @@
   "convention" findNameInfo @processor.@conventionNameInfo set
 
   addCodeNode
-  TRUE dynamic @processor.@nodes.last.get.@root set
+  TRUE @processor.@nodes.last.get.@root set
 
   @processorResult @processor initBuiltins
 
@@ -76,7 +76,7 @@
   processor.options.debug [
     @processor [processor:; addDebugProlog @processor.@debugInfo.@unit set] call
 
-    i: 0 dynamic;
+    i: 0;
     [
       i processor.options.fileNames.dataSize < [
         id: i processor.options.fileNames.at makeStringView addFileDebugInfo;
@@ -86,7 +86,7 @@
     ] loop
   ] when
 
-  lastFile: 0 dynamic;
+  lastFile: 0;
 
   multiParserResult.nodes.dataSize 0 > [
 
@@ -98,10 +98,10 @@
       n @lastFile set
       fileNode: n multiParserResult.nodes.at;
       rootPositionInfo: CompilerPositionInfo;
-      1 dynamic @rootPositionInfo.@column set
-      1 dynamic @rootPositionInfo.@line set
-      0 dynamic @rootPositionInfo.@offset set
-      n dynamic @rootPositionInfo.@fileNumber set
+      1 @rootPositionInfo.@column set
+      1 @rootPositionInfo.@line set
+      0 @rootPositionInfo.@offset set
+      n @rootPositionInfo.@fileNumber set
 
       processorResult.globalErrorInfo.getSize @cachedGlobalErrorInfoSize set
       topNodeIndex: StringView 0 NodeCaseCode @processorResult @processor fileNode multiParserResult rootPositionInfo CFunctionSignature astNodeToCodeNode;
@@ -125,7 +125,7 @@
         moduleName.getTextSize 0 > [
           fr: moduleName @dependedFiles.find;
           fr.success [
-            i: 0 dynamic;
+            i: 0;
             [
               i fr.value.dataSize < [
                 numberOfDependent: fr.value.dataSize 1 - i - fr.value.at;
@@ -142,7 +142,7 @@
     ];
 
     unfinishedFiles: IndexArray;
-    n: 0 dynamic;
+    n: 0;
     [
       n multiParserResult.nodes.dataSize < [
         multiParserResult.nodes.dataSize 1 - n - @unfinishedFiles.pushBack
@@ -175,8 +175,8 @@
       0 clearProcessorResult
 
       dependedFiles.getSize 0 > [
-        hasError: FALSE dynamic;
-        hasErrorMessage: FALSE dynamic;
+        hasError: FALSE;
+        hasErrorMessage: FALSE;
         dependedFiles [
           # queue is empty, but has uncompiled files
           pair:;
@@ -228,7 +228,7 @@
     clearUnusedDebugInfo
     addAliasesForUsedNodes
 
-    i: 0 dynamic;
+    i: 0;
     [
       i processor.prolog.dataSize < [
         i @processor.@prolog.at @processorResult.@program.cat
@@ -237,7 +237,7 @@
       ] &&
     ] loop
 
-    i: 1 dynamic; # 0th node is root fake node
+    i: 1; # 0th node is root fake node
     [
       i processor.nodes.dataSize < [
         currentNode: i @processor.@nodes.at.get;
@@ -303,7 +303,7 @@
   failProc: @failProcForProcessor;
 
   NodeCaseDtor @codeNode.@nodeCase set
-  0 dynamic @codeNode.@parent set
+  0 @codeNode.@parent set
   @compilerPositionInfo @codeNode.@position set
 
   processor.options.debug [

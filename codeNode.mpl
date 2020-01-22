@@ -99,13 +99,13 @@ addNameInfoWith: [
   ] if
 ];
 
-addNameInfo: [indexOfNode copy -1 dynamic TRUE -1 dynamic addNameInfoWith];
-addNameInfoOverloaded: [TRUE -1 dynamic addNameInfoWith];
-addNameInfoNoReg: [indexOfNode copy -1 dynamic FALSE -1 dynamic addNameInfoWith];
+addNameInfo: [indexOfNode copy -1 TRUE -1 addNameInfoWith];
+addNameInfoOverloaded: [TRUE -1 addNameInfoWith];
+addNameInfoNoReg: [indexOfNode copy -1 FALSE -1 addNameInfoWith];
 
 addNameInfoFieldNoReg: [
   index: copy;
-  indexOfNode copy -1 dynamic FALSE index addNameInfoWith
+  indexOfNode copy -1 FALSE index addNameInfoWith
 ];
 
 getNameLastIndexInfo: [
@@ -170,7 +170,7 @@ makeStorageStaticness: [
 ];
 
 createVariable: [
-  FALSE dynamic FALSE dynamic TRUE dynamic createVariableWithVirtual
+  FALSE FALSE TRUE createVariableWithVirtual
 ];
 
 createVariableWithVirtual: [
@@ -296,7 +296,7 @@ makeVarString: [
 
 makeConst: [
   var:;
-  FALSE dynamic @var.@mutable set
+  FALSE @var.@mutable set
 ];
 
 getPointeeForMatching: [
@@ -321,12 +321,12 @@ getPointeeWith: [
     pointee: VarRef @var.@data.get; # reference
 
     fromParent: pointee.hostId indexOfNode = not;
-    pointeeIsGlobal: FALSE dynamic;
-    needReallyDeref: FALSE dynamic;
+    pointeeIsGlobal: FALSE;
+    needReallyDeref: FALSE;
 
     refToVar staticnessOfVar Dynamic > not [
 
-      # create new var of dynamic dereference
+      # create new var of dereference
       fromParent [
         pointeeCopy: pointee copyOneVar;
         psBegin: RefToVar;
@@ -440,7 +440,7 @@ getFieldForMatching: [
 getField: [
   refToVar:;
   copy mplFieldIndex:;
-  compileOnce
+ 
 
   var: refToVar getVar;
   [var.data.getTag VarStruct =] "Not a combined!" assert
@@ -494,14 +494,14 @@ captureEntireStruct: [
 
   refToVar @unprocessed.pushBack
 
-  i: 0 dynamic;
+  i: 0;
   [
     i unprocessed.dataSize < [
       current: i unprocessed.at copy;
       currentVar: current getVar;
       currentVar.data.getTag VarStruct = [current noMatterToCopy not] && [
         branch: VarStruct currentVar.data.get.get;
-        f: 0 dynamic;
+        f: 0;
         [
           f branch.fields.dataSize < [
             f current getField @unprocessed.pushBack
@@ -553,12 +553,12 @@ setVar: [
   refSrc:;
   uncopiedSrc: RefToVar Array;
   uncopiedDst: RefToVar AsRef Array;
-  compileOnce
+ 
 
   refSrc @uncopiedSrc.pushBack
   @refDst AsRef @uncopiedDst.pushBack
 
-  i: 0 dynamic;
+  i: 0;
   [
     i uncopiedSrc.dataSize < [
       currentSrc: i uncopiedSrc.at copy;
@@ -570,7 +570,7 @@ setVar: [
       currentSrcVar.data.getTag VarStruct = [
         branchSrc: VarStruct currentSrcVar.data.get.get;
         branchDst: VarStruct currentDstVar.data.get.get;
-        f: 0 dynamic;
+        f: 0;
         [
           f branchSrc.fields.dataSize < [
             fieldSrc: f currentSrc getField;
@@ -610,8 +610,8 @@ createRefWith: [
   ] if
 ];
 
-createRef: [TRUE dynamic createRefWith];
-createRefNoOp: [FALSE dynamic createRefWith];
+createRef: [TRUE createRefWith];
+createRefNoOp: [FALSE createRefWith];
 
 createCheckedStaticGEP: [
   refToStruct:;
@@ -669,7 +669,7 @@ makeVirtualVarReal: [
 
           varSrc.data.getTag VarStruct = [
             struct: VarStruct varSrc.data.get.get;
-            j: 0 dynamic;
+            j: 0;
             [
               j struct.fields.dataSize < [
                 srcField: j struct.fields.at;
@@ -708,7 +708,7 @@ makeVirtualVarReal: [
           varSrc: lastSrc getVar;
           varSrc.data.getTag VarStruct = [
             struct: VarStruct varSrc.data.get.get;
-            j: 0 dynamic;
+            j: 0;
             [
               j struct.fields.dataSize < [
                 srcField: j struct.fields.at;
@@ -765,7 +765,7 @@ makeVarVirtual: [
           "can not virtualize automatic struct" makeStringView compilerError
         ] [
           struct: VarStruct curVar.data.get.get;
-          j: 0 dynamic;
+          j: 0;
           [
             j struct.fields.dataSize < [compilable] && [
               curField: j struct.fields.at;
@@ -784,7 +784,7 @@ makeVarVirtual: [
           ] if
         ] [
           cur staticnessOfVar Weak < [
-            "can not virtualize dynamic value" makeStringView compilerError
+            "can not virtualize value" makeStringView compilerError
           ] when
         ] if
       ] if
@@ -819,7 +819,7 @@ makeVarTreeDirty: [
       compilable [
         var.data.getTag VarStruct = [
           struct: VarStruct var.data.get.get;
-          j: 0 dynamic;
+          j: 0;
           [
             j struct.fields.dataSize < [
               j struct.fields.at.refToVar isVirtualField not [
@@ -887,7 +887,7 @@ makeVarTreeDynamicWith: [
 
       var.data.getTag VarStruct = [
         struct: VarStruct var.data.get.get;
-        j: 0 dynamic;
+        j: 0;
         [
           j struct.fields.dataSize < [
             j struct.fields.at.refToVar isVirtualField not [
@@ -902,7 +902,7 @@ makeVarTreeDynamicWith: [
             dynamicStoraged not [
               pointee: lastRefToVar getPointeeWhileDynamize;
               pointee.mutable [pointee makeVarTreeDirty] when
-            ] when # dynamic storaged data is not real
+            ] when # storaged data is not real
           ] [
             [lastRefToVar staticnessOfVar Dynamic = lastRefToVar staticnessOfVar Dirty = or] "Ref must be only Static or Dirty or Dynamic!" assert
           ] if
@@ -920,8 +920,8 @@ makeVarTreeDynamicWith: [
   ] loop
 ];
 
-makeVarTreeDynamic:         [FALSE dynamic makeVarTreeDynamicWith];
-makeVarTreeDynamicStoraged: [TRUE  dynamic makeVarTreeDynamicWith];
+makeVarTreeDynamic:         [FALSE makeVarTreeDynamicWith];
+makeVarTreeDynamicStoraged: [TRUE  makeVarTreeDynamicWith];
 
 addOverloadForPre: [
   refToVar:;
@@ -975,7 +975,7 @@ createNamedVariable: [
       ] if
     ] if
 
-    TRUE dynamic @newRefToVar.@mutable set
+    TRUE @newRefToVar.@mutable set
 
     nameInfo newRefToVar addOverloadForPre
     newRefToVar fullUntemporize
@@ -1040,14 +1040,14 @@ processObjectNode: [
   data:;
   position: currentNode.position copy;
   name: "objectInitializer" makeStringView;
-  data NodeCaseObject dynamic name position processCallByIndexArray
+  data NodeCaseObject name position processCallByIndexArray
 ];
 
 processListNode: [
   data:;
   position: currentNode.position copy;
   name: "listInitializer" makeStringView;
-  data NodeCaseList dynamic name position processCallByIndexArray
+  data NodeCaseList name position processCallByIndexArray
 ];
 
 {
@@ -1066,7 +1066,7 @@ processListNode: [
   failProc: @failProcForProcessor;
   message:;
   [
-    compileOnce
+   
     processorResult.findModuleFail not [processor.depthOfPre 0 =] && [HAS_LOGS] && [
       ("COMPILER ERROR") addLog
       (message) addLog
@@ -1074,7 +1074,7 @@ processListNode: [
     ] when
 
     compilable [
-      FALSE dynamic @processorResult.@success set
+      FALSE @processorResult.@success set
 
       processor.depthOfPre 0 = [processorResult.passErrorThroughPRE copy] || [
         message toString @processorResult.@errorInfo.@message set
@@ -1099,7 +1099,7 @@ findLocalObject: [
   copy captureCase:;
   copy refToVar:;
 
-  i: 0 dynamic;
+  i: 0;
   [
     i currentNode.buildingMatchingInfo.captures.dataSize < [
       currentCapture: i currentNode.buildingMatchingInfo.captures.at;
@@ -1123,7 +1123,7 @@ findNameStackObject: [
   stack:;
 
   result: RefToVar;
-  i: 0 dynamic;
+  i: 0;
   [
     i stack.dataSize < [
       current: stack.dataSize 1 - i - stack.at;
@@ -1155,11 +1155,11 @@ getNameAs: [
 
   result: {
     refToVar: RefToVar;
-    startPoint: -1 dynamic;
+    startPoint: -1;
     nameInfo: nameInfo copy;
-    nameOverload: -1 dynamic;
+    nameOverload: -1;
     object: RefToVar;
-    mplFieldIndex: -1 dynamic;
+    mplFieldIndex: -1;
     nameCase: NameCaseInvalid;
   };
 
@@ -1233,22 +1233,22 @@ getNameAs: [
   result
 ];
 
-getName: [Capture FALSE dynamic -1 dynamic getNameAs];
-getNameForMatching: [TRUE dynamic -1 dynamic getNameAs];
+getName: [Capture FALSE -1 getNameAs];
+getNameForMatching: [TRUE -1 getNameAs];
 
 getNameWithOverload: [
   copy overload:;
-  Capture FALSE dynamic overload getNameAs
+  Capture FALSE overload getNameAs
 ];
 
 getNameForMatchingWithOverload: [
   copy overload:;
-  TRUE dynamic overload getNameAs
+  TRUE overload getNameAs
 ];
 
 captureName: [
   getNameResult:;
-  compileOnce
+ 
 
   result: {
     refToVar: RefToVar;
@@ -1256,7 +1256,7 @@ captureName: [
   };
 
   compilable [
-    captureError: FALSE dynamic;
+    captureError: FALSE;
 
     captureRefToVar: [
       copy captureCase:;
@@ -1450,7 +1450,7 @@ addFieldsNameInfos: [
   var: refToVar getVar;
   struct: VarStruct var.data.get.get;
 
-  i: 0 dynamic;
+  i: 0;
   [
     i struct.fields.dataSize < [
       currentField: i struct.fields.at;
@@ -1468,7 +1468,7 @@ deleteFieldsNameInfos: [
   var: refToVar getVar;
   struct: VarStruct var.data.get.get;
 
-  i: struct.fields.dataSize copy dynamic;
+  i: struct.fields.dataSize copy;
   [
     i 0 > [
       i 1 - @i set TRUE
@@ -1541,7 +1541,7 @@ callCallableField: [
   name:;
   refToVar:;
   object:;
-  compileOnce
+ 
 
   var: refToVar getVar;
   code: VarCode var.data.get.index;
@@ -1555,7 +1555,7 @@ callCallableStructWithPre: [
   nameInfo:;
   copy refToVar:;
   copy object:;
-  overloadShift: 0 dynamic;
+  overloadShift: 0;
   findInside: object.hostId 0 < not;
 
   [
@@ -1681,7 +1681,7 @@ tryImplicitLambdaCast: [
   refToSrc:;
 
   result: {
-    success: FALSE dynamic;
+    success: FALSE;
     refToVar: RefToVar;
   };
 
@@ -1696,14 +1696,14 @@ tryImplicitLambdaCast: [
       csignature: declarationNode.csignature;
       implName: ("lambda." indexOfNode "." currentNode.lastLambdaName) assembleString;
       astNode: VarCode refToSrc getVar.data.get.index @multiParserResult.@memory.at;
-      implIndex: csignature astNode implName makeStringView TRUE dynamic processExportFunction;
+      implIndex: csignature astNode implName makeStringView TRUE processExportFunction;
 
       compilable [
         implNode: implIndex processor.nodes.at.get;
         implNode.state NodeStateCompiled = not [
           currentNode.state NodeStateHasOutput > [NodeStateHasOutput @currentNode.@state set] when
           dstPointee @result.@refToVar set
-          TRUE dynamic @result.@success set
+          TRUE @result.@success set
         ] when
 
         implNode.varNameInfo 0 < not [
@@ -1713,7 +1713,7 @@ tryImplicitLambdaCast: [
           ] [
             cnr: gnr captureName;
             cnr.refToVar @result.@refToVar set
-            TRUE dynamic @result.@success set
+            TRUE @result.@success set
           ] if
         ] when
       ] when
@@ -1726,7 +1726,7 @@ tryImplicitLambdaCast: [
 ];
 
 setRef: [
-  compileOnce
+ 
   refToVar:; # destination
   var: refToVar getVar;
   var.data.getTag VarRef = [
@@ -1772,7 +1772,7 @@ setRef: [
 copyOneVarWith: [
   copy toNew:;
   src:;
-  compileOnce
+ 
 
   dst: RefToVar;
   srcVar: src getVar;
@@ -1786,7 +1786,7 @@ copyOneVarWith: [
     # manually copy only nececcary fields
     dstStruct: Struct;
     srcStruct.fields          @dstStruct.@fields set
-    @dstStruct move owner VarStruct src isVirtualField src isSchema FALSE dynamic createVariableWithVirtual
+    @dstStruct move owner VarStruct src isVirtualField src isSchema FALSE createVariableWithVirtual
     src checkedStaticnessOfVar makeStaticness @dst set
     dstStructAc: VarStruct dst getVar.@data.get.get;
     srcStruct.homogeneous       @dstStructAc.@homogeneous set
@@ -1800,7 +1800,7 @@ copyOneVarWith: [
     srcVar.data.getTag VarInvalid VarEnd [
       copy tag:;
       tag VarStruct = not [
-        tag srcVar.data.get tag src isVirtualField src isSchema FALSE dynamic createVariableWithVirtual
+        tag srcVar.data.get tag src isVirtualField src isSchema FALSE createVariableWithVirtual
         src checkedStaticnessOfVar makeStaticness
         @dst set
       ] when
@@ -1831,7 +1831,7 @@ copyVarImpl: [
     refToVar @uncopiedSrc.pushBack
     @result AsRef @uncopiedDst.pushBack
 
-    i: 0 dynamic;
+    i: 0;
     [
       i uncopiedSrc.dataSize < [
         currentSrc: i uncopiedSrc.at copy;
@@ -1847,7 +1847,7 @@ copyVarImpl: [
           currentSrcVar.data.getTag VarStruct = [
             branchSrc: VarStruct currentSrcVar.data.get.get;
             branchDst: VarStruct @currentDstVar.@data.get.get;
-            f: 0 dynamic;
+            f: 0;
             [
               f branchSrc.fields.dataSize < [
                 fromChildToParent [
@@ -1870,12 +1870,12 @@ copyVarImpl: [
   ] if
 ];
 
-copyOneVar: [FALSE dynamic copyOneVarWith];
+copyOneVar: [FALSE copyOneVarWith];
 
-copyVar:           [FALSE FALSE dynamic copyVarImpl]; #fromchild is static arg
-copyVarFromChild:  [TRUE  FALSE dynamic copyVarImpl];
-copyVarToNew:      [FALSE TRUE  dynamic copyVarImpl];
-copyVarFromParent: [TRUE  FALSE dynamic copyVarImpl];
+copyVar:           [FALSE FALSE copyVarImpl]; #fromchild is static arg
+copyVarFromChild:  [TRUE  FALSE copyVarImpl];
+copyVarToNew:      [FALSE TRUE  copyVarImpl];
+copyVarFromParent: [TRUE  FALSE copyVarImpl];
 
 {
   dynamicStoraged: Cond;
@@ -1905,7 +1905,7 @@ copyVarFromParent: [TRUE  FALSE dynamic copyVarImpl];
   begin:;
   refToVar:;
 
-  compileOnce
+ 
 
   refToVar noMatterToCopy [
     refToVar @begin set
@@ -2023,7 +2023,7 @@ addStackUnderflowInfo: [
   result:;
 
   currentNode.stack.dataSize 0 = [
-    entryRef: 0 dynamic getStackEntry;
+    entryRef: 0 getStackEntry;
     compilable [
       entry: entryRef copy;
       entry staticnessOfVar Weak = [
@@ -2110,7 +2110,7 @@ pushName: [
       possiblePointee isCallable [
         object possiblePointee nameInfo [object possiblePointee @nameInfo callCallableStructWithPre] callCallable
       ] [
-        FALSE dynamic @possiblePointee.@mutable set
+        FALSE @possiblePointee.@mutable set
         possiblePointee push
       ] if
     ] if
@@ -2225,7 +2225,7 @@ processMember: [
           fr.success [
             index: fr.index copy;
             field: index 0 cast VarStruct pointeeVar.data.get.get.fields.at.refToVar;
-            result: field VarRef TRUE dynamic TRUE dynamic TRUE dynamic createVariableWithVirtual;
+            result: field VarRef TRUE TRUE TRUE createVariableWithVirtual;
             result fullUntemporize
             read 1 = result.mutable and @result.@mutable set
             result push
@@ -2253,9 +2253,9 @@ processMember: [
   ] when
 ];
 
-processNameMemberNode: [pop 0 dynamic processMember];
-processNameReadMemberNode: [pop 1 dynamic processMember];
-processNameWriteMemberNode: [pop -1 dynamic processMember];
+processNameMemberNode: [pop 0 processMember];
+processNameReadMemberNode: [pop 1 processMember];
+processNameWriteMemberNode: [pop -1 processMember];
 
 processStringNode: [makeVarString push];
 processInt8Node:   [makeVarInt8   push];
@@ -2305,15 +2305,15 @@ callInit: [
   compilable [
     uninited: RefToVar Array;
     refToVar isVirtual not [refToVar makeVarTreeDynamic] when
-    TRUE dynamic @refToVar.@mutable set
+    TRUE @refToVar.@mutable set
     refToVar @uninited.pushBack
-    i: 0 dynamic;
+    i: 0;
     [
       i uninited.dataSize < [
         current: i uninited.at copy;
         current getVar.data.getTag VarStruct = [
           struct: VarStruct current getVar.data.get.get;
-          f: struct.fields.dataSize copy dynamic;
+          f: struct.fields.dataSize copy;
           [
             f 0 > [
               f 1 - @f set TRUE
@@ -2327,7 +2327,7 @@ callInit: [
       ] &&
     ] loop
 
-    i: uninited.dataSize copy dynamic;
+    i: uninited.dataSize copy;
     [
       i 0 > [
         i 1 - @i set
@@ -2412,7 +2412,7 @@ callAssign: [
           ] [
             structSrc: VarStruct curSrcVar.data.get.get;
             structDst: VarStruct curDstVar.data.get.get;
-            f: 0 dynamic;
+            f: 0;
             [
               f structSrc.fields.dataSize < [
                 srcField: f curSrc processStaticAt;
@@ -2436,7 +2436,7 @@ callDie: [
   compilable [
     unkilled: RefToVar Array;
     refToVar fullUntemporize
-    TRUE dynamic @refToVar.@mutable set
+    TRUE @refToVar.@mutable set
     refToVar @unkilled.pushBack
 
     [
@@ -2462,7 +2462,7 @@ callDie: [
             ] if
           ] when
 
-          f: 0 dynamic;
+          f: 0;
           [
             f struct.fields.dataSize < [
               f struct.fields.at.refToVar isAutoStruct [
@@ -2577,7 +2577,7 @@ processUseModule: [
     last: pair.index moduleList.getSize 1 - =;
 
     asUse [last copy] && [
-      current {used: FALSE dynamic; position: currentNode.position copy;} @currentNode.@usedModulesTable.insert
+      current {used: FALSE; position: currentNode.position copy;} @currentNode.@usedModulesTable.insert
       current TRUE @currentNode.@directlyIncludedModulesTable.insert
       current addNamesFromModule
     ] [
@@ -2587,7 +2587,7 @@ processUseModule: [
           current TRUE @currentNode.@directlyIncludedModulesTable.insert
         ] when
         current @currentNode.@includedModules.pushBack
-        current {used: FALSE dynamic; position: currentNode.position copy;} @currentNode.@includedModulesTable.insert
+        current {used: FALSE; position: currentNode.position copy;} @currentNode.@includedModulesTable.insert
         current addNamesFromModule
       ] when
     ] if
@@ -2597,7 +2597,7 @@ processUseModule: [
 finalizeListNode: [
   struct: Struct;
   compilable [
-    i: 0 dynamic;
+    i: 0;
     [
       i currentNode.stack.dataSize < [
         curRef: i @currentNode.@stack.at;
@@ -2608,7 +2608,7 @@ finalizeListNode: [
         curRef getVar.temporary [
           curRef @newField.@refToVar set
         ] [
-          curRef TRUE dynamic createRef @newField.@refToVar set
+          curRef TRUE createRef @newField.@refToVar set
         ] if
 
         newField @struct.@fields.pushBack
@@ -2625,7 +2625,7 @@ finalizeListNode: [
       refToStruct createAllocIR @refToStruct set
     ] when
 
-    i: 0 dynamic;
+    i: 0;
     [
       i currentNode.stack.dataSize < [
         curFieldRef: i struct.fields.at.refToVar;
@@ -2653,7 +2653,7 @@ finalizeObjectNode: [
   refToStruct: @currentNode.@struct move owner VarStruct createVariable;
   structInfo: VarStruct refToStruct getVar.data.get.get;
 
-  i: 0 dynamic;
+  i: 0;
   [
     i structInfo.fields.dataSize < [
       dstFieldRef: i structInfo.fields.at.refToVar;
@@ -2664,7 +2664,7 @@ finalizeObjectNode: [
 
   refToStruct isVirtual not [
     refToStruct createAllocIR drop
-    i: 0 dynamic;
+    i: 0;
     [
       i structInfo.fields.dataSize < [
         dstFieldRef: i structInfo.fields.at.refToVar;
@@ -2806,8 +2806,8 @@ concreteMatchingNode: [
 deleteNode: [
   copy nodeIndex:;
   node: nodeIndex @processor.@nodes.at.get;
-  TRUE dynamic @node.@empty   set
-  TRUE dynamic @node.@deleted set
+  TRUE @node.@empty   set
+  TRUE @node.@deleted set
   @node.@program.release
 
   nodeIndex deleteMatchingNode
@@ -2822,12 +2822,12 @@ clearRecursionStack: [
 ];
 
 checkRecursionOfCodeNode: [
-  clearBuildingMatchingInfo: FALSE dynamic;
+  clearBuildingMatchingInfo: FALSE;
 
   removePrevNodes: [
     #go back from end of   nodes to current node, delete "hasOutput" and "noOutput" nodes
     i: processor.nodes.getSize 1 -;
-    processed: FALSE dynamic;
+    processed: FALSE;
     [
       i 0 < not [
         current: i @processor.@nodes.at.get;
@@ -2865,7 +2865,7 @@ checkRecursionOfCodeNode: [
     @processor.@recursiveNodesStack.popBack
     #go back from end of   nodes to current node, mark "hasOutput" nodes as "Compiled"; "noOutput" nodes - logic error, assert
     i: processor.nodes.getSize 1 -;
-    processed: FALSE dynamic;
+    processed: FALSE;
     [
       i 0  < not [
         current: i @processor.@nodes.at.get;
@@ -2935,7 +2935,7 @@ checkRecursionOfCodeNode: [
             ] when
 
             result [
-              i: 0 dynamic;
+              i: 0;
               [
                 i currentNode.matchingInfo.inputs.getSize < [
                   current1: i currentNode.matchingInfo.inputs.at.refToVar;
@@ -2957,7 +2957,7 @@ checkRecursionOfCodeNode: [
             ] when
 
             result [
-              i: 0 dynamic;
+              i: 0;
               [
                 i currentNode.matchingInfo.captures.getSize < [
                   capture1: i currentNode.matchingInfo.captures.at;
@@ -2984,7 +2984,7 @@ checkRecursionOfCodeNode: [
             ] when
 
             result [
-              i: 0 dynamic;
+              i: 0;
               [
                 i currentNode.matchingInfo.fieldCaptures.getSize < [
                   capture1: i currentNode.matchingInfo.fieldCaptures.at;
@@ -3011,7 +3011,7 @@ checkRecursionOfCodeNode: [
             ] when
 
             result [
-              i: 0 dynamic;
+              i: 0;
               [
                 i currentNode.stack.getSize < [
                   current1: i currentNode.stack.at;
@@ -3109,7 +3109,7 @@ makeCompilerPosition: [
         refForArg TRUE
       ] [
         copyForArg: refToVar copyVarToNew;
-        TRUE dynamic @copyForArg.@mutable set
+        TRUE @copyForArg.@mutable set
         refToVar copyForArg createCopyToNew
         copyForArg FALSE
       ] if
@@ -3180,9 +3180,9 @@ makeCompilerPosition: [
   ];
 
   addCopyArg: [FALSE TRUE addArg];
-  addRetArg: [-1 dynamic TRUE TRUE addArg];
-  addRefArg: [copy output:; -1 dynamic output FALSE addArg];
-  addOutputArg: [TRUE dynamic addRefArg];
+  addRetArg: [-1 TRUE TRUE addArg];
+  addRefArg: [copy output:; -1 output FALSE addArg];
+  addOutputArg: [TRUE addRefArg];
 
   addVirtualOutput: [
     copy refToVar:;
@@ -3191,7 +3191,7 @@ makeCompilerPosition: [
     refToVar isAutoStruct [
       var.usedInHeader [
         copyForArg: refToVar copyVarToNew;
-        TRUE dynamic @copyForArg.@mutable set
+        TRUE @copyForArg.@mutable set
         refToVar copyForArg createCopyToNew
         copyForArg @refToVar set
       ] when
@@ -3210,7 +3210,7 @@ makeCompilerPosition: [
 
   callDestructors: [
     currentNode.parent 0 = [
-      i: 0 dynamic;
+      i: 0;
       [
         i currentNode.candidatesToDie.dataSize < [
           current: i @currentNode.@candidatesToDie.at;
@@ -3227,7 +3227,7 @@ makeCompilerPosition: [
       ] each
     ] [
       retInstructionIndex: currentNode.program.dataSize 1 -;
-      i: currentNode.candidatesToDie.dataSize copy dynamic;
+      i: currentNode.candidatesToDie.dataSize copy;
       [
         i 0 > [
           i 1 - @i set
@@ -3278,7 +3278,7 @@ makeCompilerPosition: [
   ] when
 
   compilable [
-    i: 0 dynamic;
+    i: 0;
     [
       i currentNode.buildingMatchingInfo.inputs.dataSize < [
         # const to plain make copy
@@ -3328,7 +3328,7 @@ makeCompilerPosition: [
   ] when
 
   @currentNode.@outputs.clear
-  i: 0 dynamic;
+  i: 0;
   [
     i currentNode.stack.dataSize < [
       current: i currentNode.stack.at;
@@ -3380,7 +3380,7 @@ makeCompilerPosition: [
   callDestructors
   processor.options.verboseIR ["called destructors" createComent] when
 
-  i: 0 dynamic;
+  i: 0;
   [
     i currentNode.buildingMatchingInfo.captures.dataSize < [
       current: i currentNode.buildingMatchingInfo.captures.at;
@@ -3422,7 +3422,7 @@ makeCompilerPosition: [
   addNames: [
     s:;
     names:;
-    i: 0 dynamic;
+    i: 0;
     [
       i names.dataSize < [
         nameWithOverload: i names.at;
@@ -3714,7 +3714,7 @@ finalizeCodeNode: [
 addIndexArrayToProcess: [
   indexArray:;
 
-  i: indexArray.dataSize copy dynamic;
+  i: indexArray.dataSize copy;
   [
     i 0 > [
       i 1 - @i set
@@ -3750,7 +3750,7 @@ nodeHasCode: [
   copy nodeCase:;
   copy parentIndex:;
   functionName:;
-  compileOnce
+ 
 
   addCodeNode
   codeNode: @processor.@nodes.last.get;
@@ -3776,12 +3776,12 @@ nodeHasCode: [
   maxDepthOfPre:       64;
 
   processor.depthOfRecursion maxDepthOfRecursion > [
-    TRUE dynamic @processorResult.@passErrorThroughPRE set
+    TRUE @processorResult.@passErrorThroughPRE set
     ("max depth of recursion (" maxDepthOfRecursion ") exceeded") assembleString compilerError
   ] when
 
   processor.depthOfPre maxDepthOfPre > [
-    TRUE dynamic @processorResult.@passErrorThroughPRE set
+    TRUE @processorResult.@passErrorThroughPRE set
     ("max depth of PRE recursion (" maxDepthOfPre ") exceeded") assembleString compilerError
   ] when
   
@@ -3789,10 +3789,10 @@ nodeHasCode: [
   indexArray storageAddress indexOfNode addMatchingNode
 
   currentNode.parent 0 = [indexOfNode 1 >] && [
-    1 dynamic TRUE dynamic processUseModule #definitions
+    1 TRUE processUseModule #definitions
   ] when
 
-  recursionTries: 0 dynamic;
+  recursionTries: 0;
   [
     createLabel
 

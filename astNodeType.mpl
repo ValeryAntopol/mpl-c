@@ -37,22 +37,22 @@ IndexArray: [Int32 Array];
 
 NamedRecursiveBranch:[{
   children: IndexArray; # Array of Index
-  name: String; # dynamic String
-  nameInfo: 0 dynamic; #index in NameInfo pool
+  name: String; # String
+  nameInfo: 0; #index in NameInfo pool
 }];
 
 NamedBranch: [{
-  name: String; # dynamic String
-  nameInfo: 0 dynamic; #index in NameInfo pool
+  name: String; # String
+  nameInfo: 0; #index in NameInfo pool
 }];
 
 AstNode: [{
   virtual AST_NODE: ();
   token:     String;
-  column:    -1 dynamic;
-  line:      -1 dynamic;
-  offset:    -1 dynamic;
-  fileNumber: 0 dynamic;
+  column:    -1;
+  line:      -1;
+  offset:    -1;
+  fileNumber: 0;
   data: (
     Cond                 #EmptyNode:
     NamedRecursiveBranch #LabelNode:
@@ -89,11 +89,11 @@ makePositionInfo: [{
   offset: copy;
 }];
 
-PositionInfo: [-1 dynamic 1 dynamic 0 dynamic makePositionInfo];
+PositionInfo: [-1 1 0 makePositionInfo];
 
 ParserResult: [{
   virtual PARSER_RESULT: ();
-  success: TRUE dynamic;
+  success: TRUE;
   errorInfo: {
     message: String;
     position: PositionInfo;

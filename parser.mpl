@@ -361,7 +361,7 @@ iterate: [
     currentPosition @prevPosition set
 
     currentCode ascii.lf = [
-      0 dynamic @currentPosition.@column set
+      0 @currentPosition.@column set
       currentPosition.line 1 + @currentPosition.@line set
     ] when
 
@@ -386,7 +386,7 @@ lexicalError: [
 
 parseStringConstant: [
   nameSymbols: StringView Array;
-  slashed: FALSE dynamic;
+  slashed: FALSE;
   iterate
 
   [
@@ -457,14 +457,14 @@ parseDecNumber: [
   afterT: IntArray;
   currentArray: @beforeDot;
   hasEMinus: FALSE;
-  typeClass: 0 dynamic;
-  stage: 0 dynamic;
+  typeClass: 0;
+  stage: 0;
   #0 before dot or else
   #1 after dot
   #2 after e
   #3 after n/r
 
-  result: 0 dynamic;
+  result: 0;
   tokenBegin: currentPosition.offset hasMinus [1 -][copy] if;
   tokenEnd: tokenBegin copy;
 
@@ -542,15 +542,15 @@ parseDecNumber: [
 
   afterT.getSize 2 > [ "error in number constant" lexicalError ] when
 
-  typeName: 0 dynamic;
+  typeName: 0;
   afterT.getSize [typeName 100 * i afterT.at + 1 + @typeName set] times
 
   typeClass 2 = [
-    type: 0.0r64 dynamic;
-    ten: 10.0r64 dynamic;
-    result: 0.0r64 dynamic;
+    type: 0.0r64;
+    ten: 10.0r64;
+    result: 0.0r64;
     beforeDot.getSize [result 10.0r64 * i beforeDot.at type cast + @result set] times
-    tenRcp: 0.1r64 dynamic;
+    tenRcp: 0.1r64;
     fracPartFactor: tenRcp copy;
     afterDot.getSize [
       digit: i afterDot.at type cast;
@@ -558,7 +558,7 @@ parseDecNumber: [
       fracPartFactor tenRcp * @fracPartFactor set
     ] times
 
-    decOrder: 0.0r64 dynamic;
+    decOrder: 0.0r64;
     afterE.getSize [decOrder 10.0r64 * i afterE.at type cast + @decOrder set] times
     hasEMinus [decOrder neg @decOrder set] when
     hasMinus [result neg @result set] when
@@ -576,9 +576,9 @@ parseDecNumber: [
   ] [
     typeClass 1 = [
       hasMinus ["negative natural constants not allowed" lexicalError] when
-      type: 0n64 dynamic;
-      ten: 10n64 dynamic;
-      result: 0n64 dynamic;
+      type: 0n64;
+      ten: 10n64;
+      result: 0n64;
       beforeDot.getSize [result 10n64 * i beforeDot.at 0i64 cast type cast + @result set] times
       typeName 705 = [
         result token makeNumbern64Node @mainResult.@memory.pushBack
@@ -602,9 +602,9 @@ parseDecNumber: [
         ] if
       ] if
     ] [
-      type: 0i64 dynamic;
-      ten: 10i64 dynamic;
-      result: 0i64 dynamic;
+      type: 0i64;
+      ten: 10i64;
+      result: 0i64;
       beforeDot.getSize [result 10i64 * i beforeDot.at type cast + @result set] times
       hasMinus [result neg @result set] when
       typeName 705 = [
@@ -640,12 +640,12 @@ parseHexNumber: [
   beforeT: IntArray;
   afterT: IntArray;
   currentArray: @beforeT;
-  typeClass: 0 dynamic;
-  stage: 0 dynamic;
+  typeClass: 0;
+  stage: 0;
   #0 before n
   #1 after n
 
-  result: 0 dynamic;
+  result: 0;
   tokenBegin: currentPosition.offset hasMinus [3 -][2 -] if;
   tokenEnd: tokenBegin copy;
 
@@ -691,7 +691,7 @@ parseHexNumber: [
   token: tokenBegin tokenEnd splittedString.chars makeSubRange assembleString;
   afterT.getSize 2 > [ "error in number constant" lexicalError ] when
 
-  typeName: 0 dynamic;
+  typeName: 0;
   afterT.getSize [typeName 100 * i afterT.at + 1 + @typeName set] times
   hasMinus ["negative hex constants not allowed" lexicalError] when
 
@@ -723,9 +723,9 @@ parseHexNumber: [
       ] if
     ] if
   ] [
-    type: 0i64 dynamic;
-    ten: 10i64 dynamic;
-    result: 0i64 dynamic;
+    type: 0i64;
+    ten: 10i64;
+    result: 0i64;
     beforeT.getSize 0 = ["empty hex constant" lexicalError] when
     beforeT.getSize [result 16i64 * i beforeT.at type cast + @result set] times
     typeName 705 = [
@@ -755,9 +755,9 @@ parseHexNumber: [
 ];
 
 parseNumber: [
-  hasMinus: FALSE dynamic;
+  hasMinus: FALSE;
   currentCode ascii.minus = [
-    TRUE dynamic @hasMinus set
+    TRUE @hasMinus set
     iterate
   ] [
     currentCode ascii.plus = [iterate] when
@@ -797,14 +797,14 @@ parseName: [
     "MEMBER"
   ) Int32 enum;
 
-  dotState: DotState.UNKNOWN dynamic;
-  read: FALSE dynamic;
-  write: FALSE dynamic;
-  label: FALSE dynamic;
+  dotState: DotState.UNKNOWN;
+  read: FALSE;
+  write: FALSE;
+  label: FALSE;
   checkOffset: currentPosition.offset copy;
   checkFirst: [currentPosition.offset checkOffset > ["invalid identifier" lexicalError] when];
   nameSymbols: StringView Array;
-  first: TRUE dynamic;
+  first: TRUE;
 
   [
     first [currentCode pc.digits inArray] && [
@@ -950,7 +950,7 @@ parseName: [
 ];
 
 parseIdentifier: [
-  compileOnce
+ 
 
   currentCode ascii.quote = [
     parseStringConstant
@@ -1114,7 +1114,7 @@ parseNode: [
     currentPosition: PositionInfo;
     prevPosition: PositionInfo;
 
-    currentCode: 0n32 dynamic;
+    currentCode: 0n32;
     currentSymbol: StringView;
 
     pc: makeParserConstants;
